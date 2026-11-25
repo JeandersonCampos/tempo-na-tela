@@ -132,11 +132,11 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
 @media(prefers-reduced-motion:reduce){.flap{display:none}}
 #pair-open{font-size:.8rem;min-height:36px;padding:5px 9px}
 #pair-code img{display:block;width:min(100%,240px);height:auto;margin:12px auto}
-#pair-link{display:block;color:var(--accent);text-align:center;padding:8px}
+#pair-share-link{width:100%;padding:8px;margin-top:8px}
 #remote-controller{text-align:center;justify-content:center}
 #remote-controller h2{margin:0 0 12px}
 #remote-clock{font-size:clamp(2rem,10vw,7rem);font-weight:800;font-variant-numeric:tabular-nums}
-#remote-duration{width:min(100%,14rem);margin:12px auto 0;padding:8px;text-align:center}
+#remote-duration{border:0;padding:0;min-inline-size:0}
 #remote-laps{width:fit-content;margin-inline:auto}
 body.paired-display header,body.paired-display #panel nav,
 body.paired-display #panel .controls,body.paired-display #duration,
@@ -190,7 +190,7 @@ body.paired-display main{padding-top:8px}
     <button type="button" data-remote-mode="timer" aria-pressed="false">Temporizador</button>
   </nav>
   <output id="remote-clock" role="timer" aria-live="off">00:00:00</output>
-  <input id="remote-duration" type="number" min="1" max="359999" step="1" inputmode="numeric" aria-label="Duração em segundos" placeholder="Duração em segundos" required hidden>
+  <fieldset class="duration" id="remote-duration" aria-label="Duração" hidden disabled></fieldset>
   <div class="controls">
     <button class="btn primary" type="button" data-remote-action="start">Iniciar</button>
     <button class="btn" type="button" data-remote-action="reset">Zerar</button>
@@ -215,7 +215,8 @@ body.paired-display main{padding-top:8px}
       <button class="btn" type="submit">Conectar pelo link</button>
     </form>
   </section>
-  <a id="pair-link" href="./" target="_blank" rel="noopener" hidden>Abrir link do controle</a>
+  <button class="btn" id="pair-share" type="button" hidden>Compartilhar link de controle</button>
+  <input id="pair-share-link" type="text" readonly aria-label="Link de controle para copiar" hidden>
   <button class="btn" id="pair-create" type="button">Gerar QR code</button>
   <button class="btn" id="pair-end" type="button" hidden>Encerrar sessão</button>
   <form method="dialog"><button class="btn">Fechar</button></form>
@@ -588,6 +589,6 @@ keepScreenOn();
 </script>
 <script src="./qrcode.js"></script>
 <script src="./jsqr.js"></script>
-<script src="./remote-control.js?v=19"></script>
+<script src="./remote-control.js?v=20"></script>
 </body>
 </html>

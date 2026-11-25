@@ -10,6 +10,8 @@
   const remoteActions = [...controller.querySelectorAll("[data-remote-action]")];
   const remoteModes = [...controller.querySelectorAll("[data-remote-mode]")];
   const pairStatus = byId("pair-status");
+  const shareButton = byId("pair-share");
+  const shareField = byId("pair-share-link");
   let hostSession;
   let remoteSession;
   let remoteSnapshot;
@@ -20,7 +22,14 @@
   let snapshotReceivedAt = 0;
   let displayedLaps = "";
   let enteredDuration = false;
-  remoteDuration.oninput = () => { enteredDuration = true; };
+  remoteDuration.oninput = () => { enteredDuration = true; remoteStatus.textContent = ""; };
+  const remoteFields = [];
+
+  function setRemoteDuration(seconds) {
+    remoteFields[0].value = Math.floor(seconds / 3600);
+    remoteFields[1].value = Math.floor(seconds / 60) % 60;
+    remoteFields[2].value = seconds % 60;
+  }
 
   async function request(token, method = "GET", body, filter = "") {
     const query = "?expires_at=gt.now" + filter;
@@ -97,7 +106,7 @@
       const update = { snapshot: snapshot() };
       if (row.command) update.command = null;
       await request(session.token, "PATCH", update);
-      if (hostSession === session && scanner.hidden) pairStatus.textContent = "Para abrir este menu no visor pareado, toque nos números ou pressione Esc.";
+      if (hostSession === session && pairStatus.textContent === "Conexão interrompida. Tentando reconectar.") pairStatus.textContent = "Conexão restabelecida.";
     } catch {
       if (hostSession === session) pairStatus.textContent = "Conexão interrompida. Tentando reconectar.";
     }
@@ -108,7 +117,9 @@
     hostSession = null;
     document.body.classList.remove("paired-display");
     byId("pair-code").replaceChildren();
-    byId("pair-link").hidden = true;
+    shareButton.hidden = true;
+    shareField.hidden = true;
+    shareField.value = "";
     byId("pair-end").hidden = true;
     byId("pair-create").hidden = false;
     byId("pair-create").disabled = false;
@@ -120,7 +131,7 @@
   }
 
   byId("pair-open").onclick = openPairDialog;
-  panel.onclick = () => {
+  clock.onclick = () => {
     if (document.body.classList.contains("paired-display")) openPairDialog();
   };
   document.addEventListener("keydown", event => {
@@ -256,22 +267,44 @@
       code.addData(url.href);
       code.make();
       await request(token, "POST", { token, snapshot: snapshot() });
-      const session = { token };
+      const session = { token, url: url.href };
       hostSession = session;
       const img = document.createElement("img");
       img.src = code.createDataURL(4, 16);
       img.alt = "QR code para conectar o celular";
       byId("pair-code").replaceChildren(img);
-      const link = byId("pair-link");
-      link.href = url.href;
-      link.hidden = false;
+      shareButton.hidden = false;
       byId("pair-end").hidden = false;
       byId("pair-create").hidden = true;
+      pairStatus.textContent = "Escaneie o QR code ou compartilhe o link de controle.";
       syncHost(session);
     } catch {
       endHost(lan ? "Confira a rede local e tente novamente." : "Confira a internet e tente novamente.");
     }
   };
+  shareButton.onclick = async () => {
+    const session = hostSession;
+    if (!session) return;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Controle do Tempo na Tela", url: session.url });
+        return;
+      }
+    } catch (error) {
+      if (error.name === "AbortError") return;
+    }
+    if (hostSession !== session) return;
+    try {
+      await navigator.clipboard.writeText(session.url);
+      pairStatus.textContent = "Link de controle copiado.";
+    } catch {
+      if (hostSession !== session) return;
+      shareField.value = session.url;
+      shareField.hidden = false;
+      shareField.select();
+    }
+  };
+
   byId("pair-end").onclick = async () => {
     const session = hostSession;
     if (!session) return;
@@ -326,6 +359,7 @@
     });
     const message = !live ? "Aguardando o visor conectado…" : pending ? "Enviando comando…" :
       finished ? "Tempo esgotado!" : active ? "Em andamento" : "Visor conectado";
+    if (!locked && ready && remoteStatus.textContent === "Escolha uma duração maior que zero.") return;
     if (remoteStatus.textContent !== message) remoteStatus.textContent = message;
   }
 
@@ -364,7 +398,7 @@
         lastSeenAt = snapshotReceivedAt = performance.now();
         remoteSnapshot = row.snapshot;
         showLaps(remoteSnapshot);
-        if (!enteredDuration) remoteDuration.value = row.snapshot.timer.duration ? row.snapshot.timer.duration / 1000 : "";
+        if (!enteredDuration) setRemoteDuration(Math.round(row.snapshot.timer.duration / 1000));
       }
       pending = row.command;
       if (!joined && !pending && performance.now() - lastSeenAt < 5000) {
@@ -407,6 +441,15 @@
   const match = /^#controle=([0-9a-f]{64})$/.exec(location.hash);
   if (!match) return;
   remoteSession = match[1];
+  remoteDuration.replaceChildren(...Array.from(form.children, child => child.cloneNode(true)));
+  remoteFields.push(...remoteDuration.querySelectorAll("input"));
+  remoteFields.forEach(input => { input.removeAttribute("id"); });
+  for (const button of remoteDuration.querySelectorAll("[data-minutes]")) {
+    button.onclick = () => {
+      setRemoteDuration(Number(button.dataset.minutes) * 60);
+      remoteDuration.dispatchEvent(new Event("input"));
+    };
+  }
   byId("panel").hidden = true;
   byId("pair-open").hidden = true;
   controller.hidden = false;
@@ -418,8 +461,14 @@
       const data = remoteSnapshot;
       const active = data.mode === "watch" ? data.watch.running : data.timer.phase === "running";
       if (action === "start" && data.mode === "timer" && data.timer.phase === "ready") {
-        if (!remoteDuration.reportValidity()) return;
-        send("start", data.mode, remoteDuration.valueAsNumber);
+        if (!remoteFields.every(field => field.reportValidity())) return;
+        const [hours, minutes, seconds] = remoteFields.map(field => field.valueAsNumber);
+        const duration = ((hours * 60 + minutes) * 60 + seconds);
+        if (!duration) {
+          remoteStatus.textContent = "Escolha uma duração maior que zero.";
+          return;
+        }
+        send("start", data.mode, duration);
         return;
       }
       send(action === "start" && active ? "pause" : action, data.mode);
