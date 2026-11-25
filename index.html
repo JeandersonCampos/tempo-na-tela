@@ -194,7 +194,9 @@ body.paired-display main{padding-top:8px}
 #display-message-text{display:inline-block;white-space:nowrap}
 #display-message.is-scrolling #display-message-window{text-align:start}
 #display-message.is-scrolling #display-message-text{animation:display-marquee var(--scroll-duration) linear infinite}
-@keyframes display-marquee{from{transform:translateX(-100%)}to{transform:translateX(var(--scroll-width))}}
+@keyframes display-marquee{from{transform:translateX(var(--scroll-width))}to{transform:translateX(-100%)}}
+#display-message:not([hidden]){animation:display-message-alert 1.4s step-end infinite}
+@keyframes display-message-alert{0%,100%{background-color:#ffdf60}50%{background-color:#dbac25}}
 #remote-message-form{width:min(100%,34rem);margin:12px auto;text-align:left}
 #remote-message-form label{display:block;margin-bottom:6px;font-weight:700}
 .message-compose{display:grid;grid-template-columns:minmax(0,1fr) repeat(2,44px);gap:6px}
