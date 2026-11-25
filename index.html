@@ -37,6 +37,10 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
 .clock:not([data-centiseconds]){
   grid-template-columns:repeat(2,minmax(0,1fr) auto) minmax(0,1fr);
 }
+.clock{
+  --label-size:clamp(.75rem,1.55cqi,1.25rem);
+  --label-gap:clamp(4px,.65dvh,8px);
+}
 .clock .unit{display:flex;flex-direction:column}
 .tile{
   container-type:size;
@@ -48,8 +52,8 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
 }
 .tile>span{font-size:max(1.5rem,min(64cqw,79cqh))}
 .tile::after{height:3px}
-.sep{display:grid;place-items:center;line-height:1;align-self:stretch;font-size:clamp(.85rem,2.9cqi,2.5rem);padding-bottom:1.25rem}
-.label{font-size:clamp(.68rem,2.6cqi,1rem);overflow-wrap:anywhere}
+.sep{display:grid;place-items:center;line-height:1;align-self:stretch;font-size:clamp(.85rem,2.9cqi,2.5rem);padding-bottom:calc(var(--label-size) * 1.2 + var(--label-gap))}
+.label{margin-top:var(--label-gap);font-size:var(--label-size);line-height:1.2;font-weight:650;overflow-wrap:anywhere}
 .controls{gap:clamp(6px,1.4vw,16px);margin-top:clamp(12px,2.5vw,26px)}
 .controls .btn{flex-direction:column;gap:5px;min-width:clamp(60px,15cqi,114px);padding:8px 6px;font-size:clamp(.66rem,2.65cqi,.86rem)}
 .controls .button-icon{width:1.65rem;height:1.65rem}
@@ -64,7 +68,6 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
   .brand{font-size:1.2rem;gap:5px}
   nav{width:100%}
   nav button{flex:1;padding-inline:4px}
-  .label{margin-top:6px}
 }
 @media(orientation:portrait){
   .clock,.clock:not([data-centiseconds]){
@@ -78,7 +81,6 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
   .clock:not([data-hours])>.unit:first-child,.clock>.sep{display:none}
   .clock[data-centiseconds]>.unit:last-child{width:min(50%,11rem);justify-self:center}
   .clock[data-centiseconds]>.unit:last-child .tile{min-height:42px}
-  .label{margin-top:4px}
 }
 @media(orientation:portrait) and (max-height:620px){
   main{padding-bottom:8px}
@@ -134,36 +136,6 @@ body:has(:is(#panel,#remote-controller).done.expiry-dim)::after{opacity:.08}
 :is(#panel,#remote-controller)::after{z-index:2}
 @keyframes timer-blink{0%,100%{opacity:.82} 50%{opacity:.08}}
 #panel.done .tile{color:var(--timer-alert)}
-@media(orientation:landscape){
-  #panel.done .unit:first-child{
-    --negative-sign:"−";
-    --negative-space:.42em;
-    --negative-digit-width:54cqw;
-  }
-}
-@media(orientation:portrait){
-  #panel.done .clock[data-hours] .unit:first-child,
-  #panel.done .clock:not([data-hours]) .unit:nth-child(3){
-    --negative-sign:"−";
-    --negative-space:.42em;
-    --negative-digit-width:54cqw;
-  }
-}
-#panel.done .tile>span{
-  font-size:max(1.5rem,min(var(--negative-digit-width,64cqw),79cqh));
-  padding-inline-start:var(--negative-space,0em);
-}
-#panel.done .tile>span:not(.flap){position:relative}
-#panel.done .tile>span:not(.flap)::before{
-  content:var(--negative-sign,none);
-  position:absolute;
-  inset-inline-start:0;
-  inset-block-start:50%;
-  transform:translateY(-50%);
-  font-size:.62em;
-  line-height:1;
-  z-index:2;
-}
 #panel.done #status,#remote-controller.done #remote-alert{
   position:relative;
   z-index:2;
