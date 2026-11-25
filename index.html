@@ -178,6 +178,22 @@ body.paired-display #laps,body.paired-display #panel:not(.done) #status{display:
 body.paired-display main{padding-top:8px}
 #scan-video{display:block;width:100%;max-height:40dvh;background:#111;border-radius:12px}
 #scan-link{width:100%;margin-block:8px}
+#dialog{width:min(460px,100% - 24px);max-height:calc(100dvh - 24px);padding:clamp(14px,4vw,24px)}
+.settings-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.settings-head h2{margin:0}
+.settings-head .btn{margin:0;padding:0;min-width:44px;color:var(--accent)}
+.settings-group{border:1px solid var(--line);border-radius:14px;background:var(--bg);padding:12px;margin-bottom:12px}
+.settings-group h3{margin:0 0 5px;font-size:.9rem}
+#dialog .settings-group label{display:grid;grid-template-columns:1.25rem minmax(0,1fr) auto;min-height:44px;gap:10px}
+.settings-group label+label{border-top:1px solid var(--line)}
+.settings-group .button-icon{color:var(--accent)}
+#dialog select{min-height:36px;max-width:100%;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text)}
+#dialog input[role=switch]{appearance:none;position:relative;width:42px;height:24px;margin:0;border:1px solid var(--muted);border-radius:20px;background:var(--panel);cursor:pointer}
+#dialog input[role=switch]::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--muted)}
+#dialog input[role=switch]:checked{background:var(--accent);border-color:var(--accent)}
+#dialog input[role=switch]:checked::after{left:21px;background:var(--bg)}
+.settings-group p{margin:5px 0 0}
+#test-alert-status:empty,#screen-status:empty{display:none}
 </style>
 </head>
 <body>
@@ -191,6 +207,11 @@ body.paired-display main{padding-top:8px}
   <symbol id="icon-reset" viewBox="0 0 24 24"><path d="M4 10a8 8 0 1 1 1 7M4 4v6h6"/></symbol>
   <symbol id="icon-lap" viewBox="0 0 24 24"><path d="M5 21V4c4-4 9 4 14 0v10c-5 4-10-4-14 0"/></symbol>
   <symbol id="icon-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+  <symbol id="icon-palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18h1a2 2 0 0 0 1.5-3.3A1.6 1.6 0 0 1 16 15h2a3 3 0 0 0 3-3 9 9 0 0 0-9-9ZM7 11h.01M10 7h.01M15 7h.01M18 10h.01"/></symbol>
+  <symbol id="icon-precision" viewBox="0 0 24 24"><path d="M9 3h6m-3 0v3m6 2 2-2m0 8a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-8-4v4l2 2"/></symbol>
+  <symbol id="icon-sound" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4Zm12 0a4 4 0 0 1 0 6m2-8a7 7 0 0 1 0 10"/></symbol>
+  <symbol id="icon-vibrate" viewBox="0 0 24 24"><path d="M8 4h8v16H8zM5 8l-2 2 2 2-2 2 2 2m14-8 2 2-2 2 2 2-2 2"/></symbol>
+  <symbol id="icon-install" viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4"/></symbol>
 </svg>
 <header class="shell"><h1 class="brand" style="margin:0"><img class="mark" src="./icon-192.png" width="38" height="38" alt="">Tempo na Tela</h1><button class="btn" id="pair-open" type="button">Conectar controle</button></header>
 <main class="shell">
@@ -256,16 +277,26 @@ body.paired-display main{padding-top:8px}
   <form method="dialog"><button class="btn">Fechar</button></form>
 </dialog>
 <dialog id="dialog" aria-labelledby="settings-title">
-<h2 id="settings-title">Configurações</h2>
-<label>Tema <select id="theme"><option value="light">Claro</option><option value="dark">Escuro</option></select></label>
-<label>Exibir centésimos no cronômetro <input id="centiseconds" type="checkbox"></label>
-<label>Som ao terminar <input id="sound" type="checkbox"></label>
-<label>Vibração ao terminar <input id="vibration" type="checkbox"></label>
-<button class="btn" id="install-app" type="button" hidden>Instalar app</button>
+<div class="settings-head"><h2 id="settings-title">Configurações</h2>
+  <form method="dialog"><button class="btn action-button" aria-label="Fechar configurações"><svg class="button-icon" aria-hidden="true" focusable="false"><use href="#icon-close"/></svg></button></form>
+</div>
+<section class="settings-group" aria-labelledby="settings-display">
+  <h3 id="settings-display">Exibição</h3>
+  <label><svg class="button-icon" aria-hidden="true" focusable="false"><use href="#icon-palette"/></svg><span>Tema</span><select id="theme"><option value="light">Claro</option><option value="dark">Escuro</option></select></label>
+  <label><svg class="button-icon" aria-hidden="true" focusable="false"><use href="#icon-precision"/></svg><span>Centésimos no cronômetro</span><input id="centiseconds" type="checkbox" role="switch"></label>
+  <p id="screen-status"></p>
+</section>
+<section class="settings-group" aria-labelledby="settings-alerts">
+  <h3 id="settings-alerts">Alertas do temporizador</h3>
+  <label><svg class="button-icon" aria-hidden="true" focusable="false"><use href="#icon-sound"/></svg><span>Som ao terminar</span><input id="sound" type="checkbox" role="switch"></label>
+  <label><svg class="button-icon" aria-hidden="true" focusable="false"><use href="#icon-vibrate"/></svg><span>Vibração ao terminar</span><input id="vibration" type="checkbox" role="switch"></label>
+  <p id="support" hidden>Este navegador não oferece vibração.</p>
+  <button class="btn action-button" id="test-alert" type="button"><svg class="button-icon" aria-hidden="true" focusable="false"><use href="#icon-play"/></svg><span>Testar alertas</span></button>
+  <p id="test-alert-status" role="status"></p>
+</section>
+<button class="btn action-button" id="install-app" type="button" hidden><svg class="button-icon" aria-hidden="true" focusable="false"><use href="#icon-install"/></svg><span>Instalar app</span></button>
 <p id="install-help" hidden>Para instalar, use a opção de instalação do navegador. No Safari do iPhone, use Compartilhar e toque em Adicionar à Tela de Início.</p>
-<p id="screen-status"></p>
-<p id="support" hidden>Este navegador não oferece vibração.</p>
-<form method="dialog"><button class="btn action-button"><svg class="button-icon" aria-hidden="true" focusable="false"><use href="#icon-close"/></svg><span>Fechar</span></button></form>
+<form method="dialog"><button class="btn primary">Concluir</button></form>
 </dialog>
 <script>
 const byId = id => document.getElementById(id);
@@ -474,8 +505,8 @@ function render() {
   drawClock(false);
 }
 function notify() {
-  if (vibration.checked) navigator.vibrate?.([180, 180, 180, 180, 180]);
-  if (!sound.checked || audio?.state !== "running") return;
+  const vibrated = vibration.checked && navigator.vibrate?.([180, 180, 180, 180, 180]) === true;
+  if (!sound.checked || audio?.state !== "running") return vibrated;
 
   const alarmStart = audio.currentTime + 0.02;
   const notes = [
@@ -497,7 +528,17 @@ function notify() {
     tone.start(at);
     tone.stop(end);
   }
+  return true;
 }
+byId("test-alert").onclick = async () => {
+  const feedback = byId("test-alert-status");
+  if (!sound.checked && !vibration.checked) {
+    feedback.textContent = "Ative o som ou a vibração para testar.";
+    return;
+  }
+  await prepareAudio();
+  feedback.textContent = notify() ? "Alerta de teste acionado." : "Alerta indisponível neste dispositivo.";
+};
 function checkExpiration() {
   if (timer.phase !== "running" || Date.now() < timer.deadline) return;
   timer.phase = "finished";
