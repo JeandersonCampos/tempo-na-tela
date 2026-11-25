@@ -374,19 +374,28 @@ function render() {
   drawClock(false);
 }
 function notify() {
-  if (vibration.checked) navigator.vibrate?.([200, 100, 200, 100, 350]);
+  if (vibration.checked) navigator.vibrate?.([180, 180, 180, 180, 180]);
   if (!sound.checked || audio?.state !== "running") return;
-  for (const [index, frequency] of [660, 880, 990].entries()) {
-    const at = audio.currentTime + index * 0.24;
+
+  const alarmStart = audio.currentTime + 0.02;
+  const notes = [
+    { frequency: 523.25, offset: 0, duration: 0.16 },
+    { frequency: 659.25, offset: 0.25, duration: 0.16 },
+    { frequency: 783.99, offset: 0.50, duration: 0.43 },
+  ];
+  for (const { frequency, offset, duration } of notes) {
+    const at = alarmStart + offset;
+    const end = at + duration;
     const tone = audio.createOscillator();
     const volume = audio.createGain();
+    tone.type = "triangle";
     tone.frequency.value = frequency;
     volume.gain.setValueAtTime(0.001, at);
-    volume.gain.exponentialRampToValueAtTime(0.18, at + 0.02);
-    volume.gain.exponentialRampToValueAtTime(0.001, at + 0.22);
+    volume.gain.exponentialRampToValueAtTime(0.22, at + 0.015);
+    volume.gain.exponentialRampToValueAtTime(0.001, end);
     tone.connect(volume).connect(audio.destination);
     tone.start(at);
-    tone.stop(at + 0.23);
+    tone.stop(end);
   }
 }
 function checkExpiration() {
