@@ -6,6 +6,7 @@
   const pairDialog = byId("pair-dialog");
   const controller = byId("remote-controller");
   const remoteStatus = byId("remote-status");
+  const remoteAlert = byId("remote-alert");
   const remoteDuration = byId("remote-duration");
   const remoteActions = [...controller.querySelectorAll("[data-remote-action]")];
   const remoteModes = [...controller.querySelectorAll("[data-remote-mode]")];
@@ -325,6 +326,17 @@
     return hours + ":" + minutes + ":" + seconds + (showCentiseconds ? "," + hundredths : "");
   }
 
+  function paintRemoteAlert(remaining, counting, finished) {
+    const warning = counting && remaining > 0 && remaining <= 300000;
+    const finalMinute = warning && remaining <= 60000;
+    controller.classList.toggle("timer-warning", warning);
+    controller.classList.toggle("timer-final-minute", finalMinute);
+    controller.classList.toggle("done", finished);
+    controller.classList.toggle("expiry-dim", finished && Math.floor(-remaining / 700) % 2 === 1);
+    const message = finished ? "Tempo esgotado!" : finalMinute ? "Último minuto" : warning ? "Últimos 5 minutos" : "";
+    if (remoteAlert.textContent !== message) remoteAlert.textContent = message;
+  }
+
   function paintRemote() {
     if (!remoteSnapshot) return;
     const data = remoteSnapshot;
@@ -337,6 +349,7 @@
     const locked = !live || sending || Boolean(pending);
     const ms = stopwatch ? data.watch.elapsed + (active ? delta : 0) :
       data.timer.remaining - (active || finished ? delta : 0);
+    paintRemoteAlert(ms, live && !stopwatch && active, live && finished);
     byId("remote-clock").textContent = finished ? "−" + formatRemote(Math.abs(ms)) :
       formatRemote(stopwatch ? ms : Math.ceil(Math.max(0, ms) / 1000) * 1000, stopwatch && data.centiseconds);
     remoteDuration.hidden = !ready;
@@ -358,7 +371,7 @@
       }
     });
     const message = !live ? "Aguardando o visor conectado…" : pending ? "Enviando comando…" :
-      finished ? "Tempo esgotado!" : active ? "Em andamento" : "Visor conectado";
+      finished ? "Contando o tempo excedido" : active ? "Em andamento" : "Visor conectado";
     if (!locked && ready && remoteStatus.textContent === "Escolha uma duração maior que zero.") return;
     if (remoteStatus.textContent !== message) remoteStatus.textContent = message;
   }
@@ -388,6 +401,7 @@
       if (!row) {
         remoteSession = null;
         remoteSnapshot = null;
+        paintRemoteAlert(0, false, false);
         remoteStatus.textContent = "Sessão encerrada ou expirada.";
         remoteModes.concat(remoteActions).forEach(button => { button.disabled = true; });
         remoteDuration.disabled = true;

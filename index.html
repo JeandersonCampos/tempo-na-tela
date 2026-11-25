@@ -96,24 +96,24 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
   .controls .button-icon{width:1.15rem;height:1.15rem}
   .duration input{padding-block:4px}
 }
-#panel{position:relative}
-#panel::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none}
-#panel.timer-warning{--timer-alert:#e99612;--alert-inset:8px;--alert-outset:5px}
-#panel:is(.timer-final-minute,.done){--timer-alert:#ff7569}
-#panel.done{
+:is(#panel,#remote-controller){position:relative}
+:is(#panel,#remote-controller)::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none}
+:is(#panel,#remote-controller).timer-warning{--timer-alert:#e99612;--alert-inset:8px;--alert-outset:5px}
+:is(#panel,#remote-controller):is(.timer-final-minute,.done){--timer-alert:#ff7569}
+:is(#panel,#remote-controller).done{
   --alert-inset:11px;
   --alert-outset:7px;
   --expiry-edge-opacity:.82;
   --expiry-background:#b52d37;
 }
-#panel:is(.timer-warning,.done)::after{
+:is(#panel,#remote-controller):is(.timer-warning,.done)::after{
   box-shadow:inset 0 0 0 var(--alert-inset) var(--timer-alert),0 0 0 var(--alert-outset) var(--timer-alert);
 }
-#panel.timer-warning::after{animation:timer-blink 1.4s step-end infinite}
-#panel.done::after{opacity:var(--expiry-edge-opacity)}
+:is(#panel,#remote-controller).timer-warning::after{animation:timer-blink 1.4s step-end infinite}
+:is(#panel,#remote-controller).done::after{opacity:var(--expiry-edge-opacity)}
 @keyframes timer-blink{0%,100%{opacity:.82} 50%{opacity:.08}}
 #panel.done .tile{color:var(--timer-alert)}
-#panel.done #status{
+#panel.done #status,#remote-controller.done #remote-alert{
   order:0;
   margin:0 auto clamp(6px,1.2dvh,12px);
   width:100%;
@@ -122,18 +122,22 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
   border-radius:12px;
   background:var(--expiry-background);
   color:#fff;
-  font-size:clamp(1.45rem,min(7cqi,7dvh),3.25rem);
+  font-size:clamp(1.65rem,min(8.5cqi,9dvh),4.5rem);
   font-weight:900;
   line-height:1.1;
   letter-spacing:.025em;
   text-transform:uppercase;
 }
-#panel.done.expiry-dim{--expiry-edge-opacity:.08;--expiry-background:#351a22}
+:is(#panel,#remote-controller).done.expiry-dim{--expiry-edge-opacity:.08;--expiry-background:#351a22}
 @media(prefers-reduced-motion:reduce){.flap{display:none}}
 #pair-open{font-size:.8rem;min-height:36px;padding:5px 9px}
 #pair-code img{display:block;width:min(100%,240px);height:auto;margin:12px auto}
 #pair-share-link{width:100%;padding:8px;margin-top:8px}
-#remote-controller{text-align:center;justify-content:center}
+#remote-controller{text-align:center;justify-content:center;padding-inline:max(14px,1.4vw)}
+#remote-alert:empty{display:none}
+#remote-alert{margin:0 0 8px;padding:.4rem .65rem;border-radius:10px;font-weight:800}
+#remote-controller.timer-warning #remote-alert{border:2px solid var(--timer-alert)}
+#remote-controller.done #remote-clock{color:var(--timer-alert)}
 #remote-controller h2{margin:0 0 12px}
 #remote-clock{font-size:clamp(2rem,10vw,7rem);font-weight:800;font-variant-numeric:tabular-nums}
 #remote-duration{border:0;padding:0;min-inline-size:0}
@@ -166,7 +170,6 @@ body.paired-display main{padding-top:8px}
 <div class="clock" id="clock" role="timer" aria-live="off"></div>
 <form class="duration" id="duration" aria-label="Duração" hidden>
 <div class="presets" role="group" aria-label="Atalhos de duração">
-  <button class="btn" type="button" data-minutes="5">5 min</button>
   <button class="btn" type="button" data-minutes="10">10 min</button>
   <button class="btn" type="button" data-minutes="15">15 min</button>
   <button class="btn" type="button" data-minutes="20">20 min</button>
@@ -189,6 +192,7 @@ body.paired-display main{padding-top:8px}
     <button type="button" data-remote-mode="watch" aria-pressed="false">Cronômetro</button>
     <button type="button" data-remote-mode="timer" aria-pressed="false">Temporizador</button>
   </nav>
+  <p id="remote-alert" role="status"></p>
   <output id="remote-clock" role="timer" aria-live="off">00:00:00</output>
   <fieldset class="duration" id="remote-duration" aria-label="Duração" hidden disabled></fieldset>
   <div class="controls">
@@ -589,6 +593,6 @@ keepScreenOn();
 </script>
 <script src="./qrcode.js"></script>
 <script src="./jsqr.js"></script>
-<script src="./remote-control.js?v=20"></script>
+<script src="./remote-control.js?v=21"></script>
 </body>
 </html>
