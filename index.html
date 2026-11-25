@@ -120,8 +120,8 @@ body:has(:is(#panel,#remote-controller):is(.timer-warning,.done))::after{
   z-index:1;
   --screen-edge:color-mix(in srgb,var(--screen-alert) 68%,#170c16);
   background:radial-gradient(ellipse closest-side at center,
-    color-mix(in srgb,var(--screen-alert) 20%,transparent) 0%,
-    color-mix(in srgb,var(--screen-alert) 26%,transparent) 54%,
+    color-mix(in srgb,var(--screen-alert) 6%,transparent) 0%,
+    color-mix(in srgb,var(--screen-alert) 12%,transparent) 62%,
     color-mix(in srgb,var(--screen-edge) 50%,transparent) 100%);
 }
 body:has(:is(#panel,#remote-controller).timer-warning)::after{
@@ -165,6 +165,8 @@ body:has(:is(#panel,#remote-controller).done.expiry-dim)::after{opacity:.08}
   z-index:2;
 }
 #panel.done #status,#remote-controller.done #remote-alert{
+  position:relative;
+  z-index:2;
   order:0;
   margin:0 auto clamp(6px,1.2dvh,12px);
   width:100%;
