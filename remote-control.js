@@ -180,13 +180,22 @@
     if (!decode(video, video.videoWidth, video.videoHeight)) scanFrame = setTimeout(scanVideo, 180);
   }
 
+  function takePhoto() {
+    scanFile.value = "";
+    scanFile.click();
+  }
+
+  byId("scan-photo").onclick = takePhoto;
   byId("pair-scan").onclick = async () => {
-    if (scanning) return;
     scanner.hidden = false;
+    pairStatus.textContent = "Fotografe o QR code ou cole o link do controle.";
+    if (matchMedia("(any-pointer: coarse)").matches || !navigator.mediaDevices?.getUserMedia) {
+      takePhoto();
+      return;
+    }
+    if (scanning) return;
     scanning = true;
-    pairStatus.textContent = "Aponte a câmera para o QR code, selecione uma foto ou cole o link do controle.";
     try {
-      if (!navigator.mediaDevices?.getUserMedia) return;
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } } });
       if (!scanning || !pairDialog.open) {
         stream.getTracks().forEach(track => track.stop());
@@ -198,18 +207,27 @@
       await video.play();
       scanVideo();
     } catch {
-      if (scanning) pairStatus.textContent = "Use uma foto do QR code ou cole o link do controle.";
+      if (!scanning) return;
+      stopScanner();
+      scanner.hidden = false;
+      pairStatus.textContent = "Câmera ao vivo indisponível. Toque em Tirar foto do QR code ou cole o link.";
     }
   };
   scanFile.onchange = async () => {
     const file = scanFile.files[0];
     if (!file) return;
+    const imageUrl = URL.createObjectURL(file);
     try {
-      const image = await createImageBitmap(file);
-      const found = decode(image, image.width, image.height);
-      image.close();
-      if (found) return;
-    } catch {}
+      const image = new Image();
+      image.src = imageUrl;
+      await image.decode();
+      if (!pairDialog.open || scanner.hidden || scanFile.files[0] !== file) return;
+      if (decode(image, image.naturalWidth, image.naturalHeight)) return;
+    } catch {
+      if (!pairDialog.open || scanner.hidden) return;
+    } finally {
+      URL.revokeObjectURL(imageUrl);
+    }
     pairStatus.textContent = "QR code inválido ou ilegível. Tente outra foto ou cole o link.";
   };
   byId("scan-form").onsubmit = event => {
