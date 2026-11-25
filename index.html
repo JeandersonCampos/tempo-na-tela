@@ -111,6 +111,27 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
 }
 :is(#panel,#remote-controller).timer-warning::after{animation:timer-blink 1.4s step-end infinite}
 :is(#panel,#remote-controller).done::after{opacity:var(--expiry-edge-opacity)}
+/* The translucent screen overlay is independent of the panel outline. */
+body:has(:is(#panel,#remote-controller):is(.timer-warning,.done))::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:1;
+  --screen-edge:color-mix(in srgb,var(--screen-alert) 68%,#170c16);
+  background:radial-gradient(ellipse closest-side at center,
+    color-mix(in srgb,var(--screen-alert) 20%,transparent) 0%,
+    color-mix(in srgb,var(--screen-alert) 26%,transparent) 54%,
+    color-mix(in srgb,var(--screen-edge) 50%,transparent) 100%);
+}
+body:has(:is(#panel,#remote-controller).timer-warning)::after{
+  --screen-alert:#e99612;
+  animation:timer-blink 1.4s step-end infinite;
+}
+body:has(:is(#panel,#remote-controller):is(.timer-final-minute,.done))::after{--screen-alert:#ff7569}
+body:has(:is(#panel,#remote-controller).done)::after{opacity:.82}
+body:has(:is(#panel,#remote-controller).done.expiry-dim)::after{opacity:.08}
+:is(#panel,#remote-controller)::after{z-index:2}
 @keyframes timer-blink{0%,100%{opacity:.82} 50%{opacity:.08}}
 #panel.done .tile{color:var(--timer-alert)}
 @media(orientation:landscape){
