@@ -19,15 +19,16 @@
 dialog{color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:20px;width:min(400px,100% - 28px);padding:24px}dialog::backdrop{background:#0b132a99}dialog h2{margin:0 0 18px}dialog label{display:flex;justify-content:space-between;align-items:center;padding:10px 0;gap:8px}dialog select{font:inherit}dialog input{width:20px;height:20px;accent-color:var(--accent)}dialog p{color:var(--muted);font-size:.875rem}dialog .btn{width:100%;margin-top:8px}
 .action-button{display:inline-flex;align-items:center;justify-content:center;gap:.45rem}
 .button-icon{width:1.15em;height:1.15em;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-body{min-height:100dvh;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+body{height:100dvh;display:flex;flex-direction:column;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
 .shell{width:min(100% - 2rem,90rem)}
 header{min-height:54px}
-main{padding:0 0 26px}
-.panel{container-type:inline-size;padding:clamp(12px,2.25vw,32px)}
+main{display:flex;flex:1 0 auto;flex-direction:column;padding:0 0 12px}
+.panel{display:flex;flex:1;flex-direction:column;container-type:inline-size;padding:clamp(12px,2.25vw,32px)}
 nav{margin-bottom:clamp(10px,2vw,26px)}
 .clock{
-  --columns:4;
-  --card-height:clamp(112px,42dvh,420px);
+  flex:1 0 auto;
+  align-items:stretch;
+  --tile-min-height:88px;
   width:100%;
   margin-inline:auto;
   display:grid;
@@ -35,18 +36,20 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
   gap:clamp(3px,1cqi,14px);
 }
 .clock:not([data-centiseconds]){
-  --columns:3;
   grid-template-columns:repeat(2,minmax(0,1fr) auto) minmax(0,1fr);
 }
+.clock .unit{display:flex;flex-direction:column}
 .tile{
+  container-type:size;
+  flex:1 0 auto;
   width:100%;
-  height:var(--card-height);
-  min-height:0;
-  font-size:min(calc(145cqi / var(--columns) * .34),calc(var(--card-height) * .72));
+  height:auto;
+  min-height:var(--tile-min-height);
   line-height:1;
 }
+.tile>span{font-size:clamp(1.5rem,min(64cqw,79cqh),22rem)}
 .tile::after{height:3px}
-.sep{display:grid;place-items:center;line-height:1;height:var(--card-height);font-size:clamp(.85rem,2.9cqi,2.5rem)}
+.sep{display:grid;place-items:center;line-height:1;align-self:stretch;font-size:clamp(.85rem,2.9cqi,2.5rem);padding-bottom:1.25rem}
 .label{font-size:clamp(.68rem,2.6cqi,1rem);overflow-wrap:anywhere}
 .controls{gap:clamp(6px,1.4vw,16px);margin-top:clamp(12px,2.5vw,26px)}
 .controls .btn{flex-direction:column;gap:5px;min-width:clamp(60px,15cqi,114px);padding:8px 6px;font-size:clamp(.66rem,2.65cqi,.86rem)}
@@ -60,7 +63,6 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
   .brand{font-size:1.2rem;gap:5px}
   nav{width:100%}
   nav button{flex:1;padding-inline:4px}
-  .clock{--card-height:clamp(128px,33dvh,270px)}
   .label{margin-top:6px}
 }
 @media(orientation:portrait){
@@ -68,28 +70,32 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
   .clock,.clock:not([data-centiseconds]){
     display:grid;
     grid-template-columns:minmax(0,1fr);
-    gap:clamp(8px,1.7dvh,16px);
+    gap:clamp(6px,1.1dvh,12px);
   }
-  .panel{--duration-space:0px;--usable-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom))}
-  .panel:has(.duration:not([hidden])){--duration-space:76px}
-  .clock{--card-height:clamp(86px,calc((var(--usable-height) - 250px - var(--duration-space)) / 2),380px)}
-  .clock[data-hours]{--card-height:clamp(84px,calc((var(--usable-height) - 272px - var(--duration-space)) / 3),280px)}
-  .clock[data-centiseconds]{--card-height:clamp(88px,calc((var(--usable-height) - 312px - var(--duration-space)) / 2),340px)}
-  .clock[data-hours][data-centiseconds]{--card-height:clamp(78px,calc((var(--usable-height) - 336px - var(--duration-space)) / 3),250px)}
+  .clock{grid-auto-rows:minmax(min-content,1fr);--tile-min-height:72px}
+  .clock[data-centiseconds]{grid-template-rows:repeat(2,minmax(min-content,1fr)) auto}
+  .clock[data-hours][data-centiseconds]{grid-template-rows:repeat(3,minmax(min-content,1fr)) auto}
   .clock:not([data-hours])>.unit:first-child,.clock>.sep{display:none}
-  .tile{font-size:min(48cqi,calc(var(--card-height) * .84))}
   .clock[data-centiseconds]>.unit:last-child{width:min(50%,11rem);justify-self:center}
-  .clock[data-centiseconds]>.unit:last-child .tile{height:46px;font-size:2rem}
+  .clock[data-centiseconds]>.unit:last-child .tile{min-height:42px}
   .label{margin-top:4px}
+}
+@media(orientation:portrait) and (max-height:620px){
+  main{padding-bottom:8px}
+  .panel{padding-block:9px}
+  nav{margin-bottom:6px}
 }
 @media(orientation:landscape) and (max-height:540px){
   header{min-height:40px}
-  nav{margin-bottom:6px}
+  main{padding-bottom:8px}
+  .panel{padding-block:10px}
+  nav{margin-bottom:4px}
   .controls{margin-top:8px}
-  .clock{--card-height:clamp(74px,36dvh,190px);max-width:min(100%,150dvh)}
+  .clock{--tile-min-height:66px;max-width:min(100%,170dvh)}
   .controls .btn{flex-direction:row;min-width:72px}
   .controls .button-icon{width:1.15rem;height:1.15rem}
   .duration input{padding-block:4px}
+  #overtime-sign{margin-bottom:3px}
 }
 #panel{position:relative}
 #panel::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none}
