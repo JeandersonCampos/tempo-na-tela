@@ -130,6 +130,14 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
 }
 #panel.done.expiry-dim{--expiry-edge-opacity:.08;--expiry-background:#351a22}
 @media(prefers-reduced-motion:reduce){.flap{display:none}}
+#pair-open{font-size:.8rem;min-height:36px;padding:5px 9px}
+#pair-code img{display:block;width:min(100%,240px);height:auto;margin:12px auto}
+#pair-link{display:block;color:var(--accent);text-align:center;padding:8px}
+#remote-controller{text-align:center;justify-content:center}
+#remote-controller h2{margin:0 0 12px}
+#remote-clock{font-size:clamp(2rem,10vw,7rem);font-weight:800;font-variant-numeric:tabular-nums}
+#remote-duration{width:min(100%,14rem);margin:12px auto 0;padding:8px;text-align:center}
+#remote-laps{width:fit-content;margin-inline:auto}
 </style>
 </head>
 <body>
@@ -144,7 +152,7 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
   <symbol id="icon-lap" viewBox="0 0 24 24"><path d="M5 21V4c4-4 9 4 14 0v10c-5 4-10-4-14 0"/></symbol>
   <symbol id="icon-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
 </svg>
-<header class="shell"><h1 class="brand" style="margin:0"><img class="mark" src="./icon-192.png" width="38" height="38" alt="">Tempo na Tela</h1></header>
+<header class="shell"><h1 class="brand" style="margin:0"><img class="mark" src="./icon-192.png" width="38" height="38" alt="">Tempo na Tela</h1><button class="btn" id="pair-open" type="button">Conectar controle</button></header>
 <main class="shell">
 <section class="panel" id="panel" aria-labelledby="watch">
 <nav aria-label="Modo do relógio"><button id="watch" aria-pressed="true">Cronômetro</button><button id="timer" aria-pressed="false">Temporizador</button></nav>
@@ -169,7 +177,33 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
 <div class="controls"><button class="btn action-button" id="settings"><svg class="button-icon" aria-hidden="true" focusable="false"><use href="#icon-settings"/></svg><span class="button-label">Configurações</span></button><button class="btn action-button" id="reset" disabled><svg class="button-icon" aria-hidden="true" focusable="false"><use href="#icon-reset"/></svg><span class="button-label">Zerar</span></button><button class="btn primary action-button" id="start"><svg class="button-icon" aria-hidden="true" focusable="false"><use id="start-icon" href="#icon-play"/></svg><span class="button-label" id="start-label">Iniciar</span></button><button class="btn action-button" id="lap" aria-label="Registrar volta" disabled><svg class="button-icon" aria-hidden="true" focusable="false"><use href="#icon-lap"/></svg><span class="button-label">Volta</span></button></div>
 <section class="laps" id="laps" hidden><h2>Voltas</h2><table><thead><tr><th scope="col">Volta</th><th scope="col">Parcial</th><th scope="col">Total</th></tr></thead><tbody id="rows"></tbody></table></section>
 </section>
+<section class="panel" id="remote-controller" aria-labelledby="remote-title" hidden>
+  <h2 id="remote-title">Controle remoto</h2>
+  <nav aria-label="Modo do relógio">
+    <button type="button" data-remote-mode="watch" aria-pressed="false">Cronômetro</button>
+    <button type="button" data-remote-mode="timer" aria-pressed="false">Temporizador</button>
+  </nav>
+  <output id="remote-clock" role="timer" aria-live="off">00:00:00</output>
+  <input id="remote-duration" type="number" min="1" max="359999" step="1" inputmode="numeric" aria-label="Duração em segundos" placeholder="Duração em segundos" required hidden>
+  <div class="controls">
+    <button class="btn primary" type="button" data-remote-action="start">Iniciar</button>
+    <button class="btn" type="button" data-remote-action="reset">Zerar</button>
+    <button class="btn" type="button" data-remote-action="lap">Registrar volta</button>
+  </div>
+  <p id="remote-status" role="status">Conectando ao visor…</p>
+  <ol id="remote-laps" aria-label="Voltas registradas" hidden></ol>
+  <a href="./">Voltar ao uso local</a>
+</section>
 </main>
+<dialog id="pair-dialog" aria-labelledby="pair-title">
+  <h2 id="pair-title">Conectar controle</h2>
+  <p id="pair-status" role="status">Crie uma sessão e escaneie o QR code no celular. Quem tiver o link poderá controlar o visor.</p>
+  <div id="pair-code"></div>
+  <a id="pair-link" href="./" hidden>Abrir link do controle</a>
+  <button class="btn" id="pair-create" type="button">Gerar QR code</button>
+  <button class="btn" id="pair-end" type="button" hidden>Encerrar sessão</button>
+  <form method="dialog"><button class="btn">Fechar</button></form>
+</dialog>
 <dialog id="dialog" aria-labelledby="settings-title">
 <h2 id="settings-title">Configurações</h2>
 <label>Tema <select id="theme"><option value="light">Claro</option><option value="dark">Escuro</option></select></label>
@@ -536,5 +570,7 @@ document.addEventListener("click", keepScreenOn);
 selectMode("watch");
 keepScreenOn();
 </script>
+<script src="./qrcode.js"></script>
+<script src="./remote-control.js"></script>
 </body>
 </html>
