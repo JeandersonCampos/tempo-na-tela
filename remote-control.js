@@ -545,9 +545,7 @@
   });
   async function sendMessage(text) {
     if (!remoteSnapshot) return;
-    const draft = messageInput.value;
     const accepted = await send("message", remoteSnapshot.mode, undefined, text);
-    if (accepted && text && messageInput.value === draft) messageInput.value = "";
     messageFeedback.textContent = accepted
       ? (text ? "Mensagem enviada." : "Remoção solicitada.")
       : "Não foi possível enviar. Tente novamente.";
