@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Cronômetro com voltas e temporizador configurável.">
 <title>Tempo na Tela</title>
 <meta name="theme-color" content="#2154cb">
@@ -17,19 +17,17 @@
 .clock{display:flex;justify-content:center;align-items:flex-start;gap:clamp(3px,1.4vw,12px)}.unit{text-align:center;min-width:0}.tile{width:clamp(48px,14vw,128px);height:clamp(65px,16.5vw,138px);background:linear-gradient(var(--tile) 50%,var(--tile-bottom) 50%);border-radius:clamp(8px,2vw,18px);position:relative;display:grid;place-items:center;color:var(--digits);font-size:clamp(31px,9vw,79px);font-weight:800;letter-spacing:-.06em;font-variant-numeric:tabular-nums;perspective:380px}.tile::after{content:"";position:absolute;inset:50% 0 auto;height:2px;background:#0005;pointer-events:none}.flap{position:absolute;inset:0;display:grid;place-items:center;background:inherit;border-radius:inherit;clip-path:inset(0 0 50% 0);animation:flip .29s ease-in forwards}@keyframes flip{to{transform:rotateX(-92deg);opacity:.3}}.sep{font-size:clamp(17px,4vw,35px);line-height:clamp(65px,16.5vw,138px);color:var(--muted)}.label{margin-top:10px;display:block;color:var(--muted);font-size:clamp(.72rem,2.5vw,.9rem)}.duration{display:flex;justify-content:center;gap:10px;margin:24px auto 0;max-width:310px}.duration label{flex:1;min-width:0;text-align:center;color:var(--muted);font-size:.875rem}.duration input{width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 4px;text-align:center;background:var(--bg);color:var(--text);margin-top:5px}
 .controls{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:25px}.primary{background:var(--accent);color:var(--bg);min-width:106px;border-color:transparent}.primary:hover:not(:disabled){background:var(--accent);filter:brightness(.9)}#status{margin:18px 0 0;text-align:center;color:var(--muted);font-size:.9rem;min-height:1.35em}.done #status{font-size:1rem;font-weight:800;color:var(--accent)}.laps{margin-top:20px}.laps h2{font-size:1.1rem;margin:0 0 12px}table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,td{text-align:right;padding:9px 4px;border-bottom:1px solid var(--line)}th:first-child,td:first-child{text-align:left}th{font-size:.85rem;color:var(--muted)}
 dialog{color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:20px;width:min(400px,100% - 28px);padding:24px}dialog::backdrop{background:#0b132a99}dialog h2{margin:0 0 18px}dialog label{display:flex;justify-content:space-between;align-items:center;padding:10px 0;gap:8px}dialog select{font:inherit}dialog input{width:20px;height:20px;accent-color:var(--accent)}dialog p{color:var(--muted);font-size:.875rem}dialog .btn{width:100%;margin-top:8px}
-.local-clock{display:flex;align-items:baseline;justify-content:flex-end;flex-wrap:wrap;gap:.2rem .75rem;margin:0 0 12px;color:var(--muted);font-size:.875rem}
-.local-clock time{color:var(--text);font-weight:700;font-variant-numeric:tabular-nums}
 .action-button{display:inline-flex;align-items:center;justify-content:center;gap:.45rem}
 .button-icon{width:1.15em;height:1.15em;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+body{min-height:100dvh;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
 .shell{width:min(100% - 2rem,90rem)}
-header{min-height:64px}
+header{min-height:54px}
 main{padding:0 0 26px}
-.local-clock{margin-bottom:10px}
 .panel{container-type:inline-size;padding:clamp(12px,2.25vw,32px)}
 nav{margin-bottom:clamp(10px,2vw,26px)}
 .clock{
   --columns:4;
-  --card-height:clamp(112px,34dvh,340px);
+  --card-height:clamp(112px,42dvh,420px);
   width:100%;
   margin-inline:auto;
   display:grid;
@@ -58,7 +56,7 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
 #status{margin-top:10px}
 @media(max-width:560px){
   .shell{width:calc(100% - 1rem)}
-  header{min-height:53px}
+  header{min-height:46px}
   .brand{font-size:1.2rem;gap:5px}
   nav{width:100%}
   nav button{flex:1;padding-inline:4px}
@@ -72,12 +70,12 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
     grid-template-columns:minmax(0,1fr);
     gap:clamp(8px,1.7dvh,16px);
   }
-  .panel{--duration-space:0px}
+  .panel{--duration-space:0px;--usable-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom))}
   .panel:has(.duration:not([hidden])){--duration-space:76px}
-  .clock{--card-height:clamp(86px,calc((100dvh - 292px - var(--duration-space)) / 2),300px)}
-  .clock[data-hours]{--card-height:clamp(84px,calc((100dvh - 316px - var(--duration-space)) / 3),230px)}
-  .clock[data-centiseconds]{--card-height:clamp(88px,calc((100dvh - 354px - var(--duration-space)) / 2),270px)}
-  .clock[data-hours][data-centiseconds]{--card-height:clamp(78px,calc((100dvh - 378px - var(--duration-space)) / 3),205px)}
+  .clock{--card-height:clamp(86px,calc((var(--usable-height) - 250px - var(--duration-space)) / 2),380px)}
+  .clock[data-hours]{--card-height:clamp(84px,calc((var(--usable-height) - 272px - var(--duration-space)) / 3),280px)}
+  .clock[data-centiseconds]{--card-height:clamp(88px,calc((var(--usable-height) - 312px - var(--duration-space)) / 2),340px)}
+  .clock[data-hours][data-centiseconds]{--card-height:clamp(78px,calc((var(--usable-height) - 336px - var(--duration-space)) / 3),250px)}
   .clock:not([data-hours])>.unit:first-child,.clock>.sep{display:none}
   .tile{font-size:min(48cqi,calc(var(--card-height) * .84))}
   .clock[data-centiseconds]>.unit:last-child{width:min(50%,11rem);justify-self:center}
@@ -85,8 +83,10 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
   .label{margin-top:4px}
 }
 @media(orientation:landscape) and (max-height:540px){
-  header{min-height:45px}
-  .clock{--card-height:clamp(74px,32dvh,164px);max-width:min(100%,120dvh)}
+  header{min-height:40px}
+  nav{margin-bottom:6px}
+  .controls{margin-top:8px}
+  .clock{--card-height:clamp(74px,36dvh,190px);max-width:min(100%,150dvh)}
   .controls .btn{flex-direction:row;min-width:72px}
   .controls .button-icon{width:1.15rem;height:1.15rem}
   .duration input{padding-block:4px}
@@ -119,7 +119,6 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
 </svg>
 <header class="shell"><h1 class="brand" style="margin:0"><img class="mark" src="./icon-192.png" width="38" height="38" alt="">Tempo na Tela</h1></header>
 <main class="shell">
-<div class="local-clock" role="group" aria-label="Data e hora local"><span id="local-date"></span><time id="local-time"></time></div>
 <section class="panel" id="panel" aria-labelledby="watch">
 <nav aria-label="Modo do relógio"><button id="watch" aria-pressed="true">Cronômetro</button><button id="timer" aria-pressed="false">Temporizador</button></nav>
 <span id="overtime-sign" aria-hidden="true" hidden>−</span>
@@ -154,7 +153,7 @@ let installPrompt;
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js").catch(error => console.error("Falha ao preparar o uso offline.", error));
-  installHelp.hidden = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  installHelp.hidden = matchMedia("(display-mode: fullscreen), (display-mode: standalone)").matches || navigator.standalone === true;
 }
 window.addEventListener("beforeinstallprompt", event => {
   event.preventDefault();
@@ -180,27 +179,6 @@ window.addEventListener("appinstalled", () => {
   installHelp.hidden = true;
 });
 
-const localDate = byId("local-date");
-const localTime = byId("local-time");
-const dateFormat = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-const timeFormat = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" });
-let localClockTimeout;
-
-function updateLocalClock() {
-  clearTimeout(localClockTimeout);
-  if (document.visibilityState !== "visible") return;
-  const now = new Date();
-  const date = dateFormat.format(now);
-  const time = timeFormat.format(now);
-  if (localDate.textContent !== date) localDate.textContent = date;
-  localTime.textContent = time;
-  localTime.dateTime = time;
-  localClockTimeout = setTimeout(updateLocalClock, 1000 - Date.now() % 1000);
-}
-
-document.addEventListener("visibilitychange", updateLocalClock);
-window.addEventListener("pageshow", updateLocalClock);
-updateLocalClock();
 const clock = byId("clock");
 const panel = byId("panel");
 const overtimeSign = byId("overtime-sign");
