@@ -134,10 +134,10 @@
   const scanFile = byId("scan-file");
   let camera;
   let scanFrame;
-  let scanning = false;
+  let scanAttempt = null;
 
   function stopScanner() {
-    scanning = false;
+    scanAttempt = null;
     clearTimeout(scanFrame);
     camera?.getTracks().forEach(track => track.stop());
     camera = undefined;
@@ -155,6 +155,7 @@
       (url.origin === "https://compasso-relogio.trimbetta32.chatgpt.site" && url.pathname === "/");
     if (!allowed || url.username || url.password || !/^#controle=[0-9a-f]{64}$/.test(url.hash)) return false;
     stopScanner();
+    if (pairDialog.open) pairDialog.close();
     if (url.origin === location.origin && url.pathname === location.pathname && url.search === location.search) {
       history.replaceState(null, "", url.href);
       location.reload();
@@ -176,7 +177,7 @@
   }
 
   function scanVideo() {
-    if (!scanning) return;
+    if (!scanAttempt) return;
     if (!decode(video, video.videoWidth, video.videoHeight)) scanFrame = setTimeout(scanVideo, 180);
   }
 
@@ -187,17 +188,21 @@
 
   byId("scan-photo").onclick = takePhoto;
   byId("pair-scan").onclick = async () => {
+    if (scanAttempt) return;
     scanner.hidden = false;
-    pairStatus.textContent = "Fotografe o QR code ou cole o link do controle.";
-    if (matchMedia("(any-pointer: coarse)").matches || !navigator.mediaDevices?.getUserMedia) {
-      takePhoto();
+    if (!navigator.mediaDevices?.getUserMedia) {
+      pairStatus.textContent = "A câmera ao vivo requer uma página HTTPS. Tire uma foto do QR code ou cole o link.";
       return;
     }
-    if (scanning) return;
-    scanning = true;
+    const attempt = {};
+    scanAttempt = attempt;
+    pairStatus.textContent = "Permita o acesso à câmera para ler o QR code.";
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } } });
-      if (!scanning || !pairDialog.open) {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: { facingMode: { ideal: "environment" } },
+      });
+      if (scanAttempt !== attempt || !pairDialog.open) {
         stream.getTracks().forEach(track => track.stop());
         return;
       }
@@ -205,12 +210,14 @@
       video.srcObject = stream;
       video.hidden = false;
       await video.play();
+      if (scanAttempt !== attempt) return;
+      pairStatus.textContent = "Aponte a câmera traseira para o QR code.";
       scanVideo();
     } catch {
-      if (!scanning) return;
+      if (scanAttempt !== attempt) return;
       stopScanner();
       scanner.hidden = false;
-      pairStatus.textContent = "Câmera ao vivo indisponível. Toque em Tirar foto do QR code ou cole o link.";
+      pairStatus.textContent = "Câmera ao vivo indisponível. Confira a permissão ou toque em Tirar foto do QR code.";
     }
   };
   scanFile.onchange = async () => {

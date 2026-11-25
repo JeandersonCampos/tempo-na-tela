@@ -208,7 +208,7 @@ body.paired-display main{padding-top:8px}
   <div id="pair-code"></div>
   <button class="btn" id="pair-scan" type="button">Escanear código</button>
   <section id="scanner" hidden>
-    <video id="scan-video" muted playsinline hidden></video>
+    <video id="scan-video" autoplay muted playsinline aria-label="Leitor de QR code ao vivo" hidden></video>
     <button class="btn" id="scan-photo" type="button">Tirar foto do QR code</button>
     <input id="scan-file" type="file" accept="image/*" capture="environment" hidden>
     <form id="scan-form"><label>Link de controle <input id="scan-link" type="url" required></label>
@@ -588,6 +588,6 @@ keepScreenOn();
 </script>
 <script src="./qrcode.js"></script>
 <script src="./jsqr.js"></script>
-<script src="./remote-control.js?v=18"></script>
+<script src="./remote-control.js?v=19"></script>
 </body>
 </html>
