@@ -1,6 +1,6 @@
 const scope = self.registration.scope;
 const cachePrefix = "tempo-na-tela:" + scope + ":";
-const cacheName = cachePrefix + "v10";
+const cacheName = cachePrefix + "v11";
 const home = new URL("./", scope).href;
 const assets = ["./manifest.webmanifest", "./icon-192.png", "./icon-512.png"]
   .map(path => new URL(path, scope).href);

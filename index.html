@@ -55,7 +55,8 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
 .controls .button-icon{width:1.65rem;height:1.65rem}
 .controls .primary{min-width:clamp(64px,18cqi,138px)}
 .duration{margin-top:12px}
-#status{margin-top:10px}
+#status{order:1;margin-top:10px}
+.laps{order:2}
 @media(max-width:560px){
   header{min-height:46px}
   .brand{font-size:1.2rem;gap:5px}
@@ -92,7 +93,6 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
   .controls .btn{flex-direction:row;min-width:72px}
   .controls .button-icon{width:1.15rem;height:1.15rem}
   .duration input{padding-block:4px}
-  #overtime-sign{margin-bottom:3px}
 }
 #panel{position:relative}
 #panel::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none}
@@ -110,12 +110,12 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
 #panel.timer-warning::after{animation:timer-blink 1.4s step-end infinite}
 #panel.done::after{opacity:var(--expiry-edge-opacity)}
 @keyframes timer-blink{0%,100%{opacity:.82} 50%{opacity:.08}}
-#overtime-sign{display:block;text-align:center;color:var(--timer-alert,var(--accent));font-size:1.65rem;font-weight:800;line-height:1;margin-bottom:10px}
 #panel.done .tile{color:var(--timer-alert)}
 #panel.done #status{
+  order:0;
+  margin:0 auto clamp(6px,1.2dvh,12px);
   width:fit-content;
   max-width:100%;
-  margin-inline:auto;
   padding:.45rem .9rem;
   border:2px solid var(--timer-alert);
   border-radius:12px;
@@ -144,7 +144,7 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
 <main class="shell">
 <section class="panel" id="panel" aria-labelledby="watch">
 <nav aria-label="Modo do relógio"><button id="watch" aria-pressed="true">Cronômetro</button><button id="timer" aria-pressed="false">Temporizador</button></nav>
-<span id="overtime-sign" aria-hidden="true" hidden>−</span>
+<p id="status" role="status"></p>
 <div class="clock" id="clock" role="timer" aria-live="off"></div>
 <form class="duration" id="duration" aria-label="Duração" hidden>
 <label>Horas<input id="hours" type="number" inputmode="numeric" min="0" max="99" step="1" value="0" required></label>
@@ -152,7 +152,6 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
 <label>Segundos<input id="seconds" type="number" inputmode="numeric" min="0" max="59" step="1" value="0" required></label>
 </form>
 <div class="controls"><button class="btn action-button" id="settings"><svg class="button-icon" aria-hidden="true" focusable="false"><use href="#icon-settings"/></svg><span class="button-label">Configurações</span></button><button class="btn action-button" id="reset" disabled><svg class="button-icon" aria-hidden="true" focusable="false"><use href="#icon-reset"/></svg><span class="button-label">Zerar</span></button><button class="btn primary action-button" id="start"><svg class="button-icon" aria-hidden="true" focusable="false"><use id="start-icon" href="#icon-play"/></svg><span class="button-label" id="start-label">Iniciar</span></button><button class="btn action-button" id="lap" aria-label="Registrar volta" disabled><svg class="button-icon" aria-hidden="true" focusable="false"><use href="#icon-lap"/></svg><span class="button-label">Volta</span></button></div>
-<p id="status" role="status"></p>
 <section class="laps" id="laps" hidden><h2>Voltas</h2><table><thead><tr><th scope="col">Volta</th><th scope="col">Parcial</th><th scope="col">Total</th></tr></thead><tbody id="rows"></tbody></table></section>
 </section>
 </main>
@@ -204,7 +203,6 @@ window.addEventListener("appinstalled", () => {
 
 const clock = byId("clock");
 const panel = byId("panel");
-const overtimeSign = byId("overtime-sign");
 const form = byId("duration");
 const fields = ["hours", "minutes", "seconds"].map(byId);
 const start = byId("start");
@@ -367,7 +365,6 @@ function render() {
   byId("laps").hidden = !stopwatch || !watch.laps.length;
   form.hidden = stopwatch || running || paused || finished;
   panel.classList.toggle("done", finished);
-  overtimeSign.hidden = !finished;
   status.textContent = stopwatch ? (running ? "Em andamento" : paused ? "Pausado" : "Pronto para iniciar") :
     timer.message || (finished ? "Tempo esgotado!" : running ? "Contagem regressiva" : paused ? "Pausado" : "Digite a duração para começar");
   drawClock(false);
