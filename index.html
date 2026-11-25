@@ -189,14 +189,14 @@ body.paired-display main{padding-top:8px}
 #dialog input[role=switch]:checked::after{left:21px;background:var(--bg)}
 .settings-group p{margin:5px 0 0}
 #test-alert-status:empty,#screen-status:empty{display:none}
-#display-message{position:relative;z-index:2;margin:0 0 8px;padding:.45em 0;border:1px solid #b98500;border-radius:12px;background:#ffdf60;color:#231a00;text-align:center;font-size:clamp(1.4rem,min(5vw,8dvh),3.8rem);font-weight:850;line-height:1.2}
+#display-message{position:relative;z-index:2;margin:0 0 8px;padding:.45em 0;border:1px solid #b98500;border-radius:12px;background:#ffe485;color:#1d1600;text-align:center;font-size:clamp(1.4rem,min(5vw,8dvh),3.8rem);font-weight:850;line-height:1.2}
 #display-message-window{display:block;overflow:hidden;margin-inline:.65em}
 #display-message-text{display:inline-block;white-space:nowrap}
 #display-message.is-scrolling #display-message-window{text-align:start}
 #display-message.is-scrolling #display-message-text{animation:display-marquee var(--scroll-duration) linear infinite}
 @keyframes display-marquee{from{transform:translateX(var(--scroll-width))}to{transform:translateX(-100%)}}
-#display-message:not([hidden]){animation:display-message-alert 1.4s step-end infinite}
-@keyframes display-message-alert{0%,100%{background-color:#ffdf60}50%{background-color:#dbac25}}
+#display-message:not([hidden]){animation:display-message-alert 2.2s ease-in-out infinite}
+@keyframes display-message-alert{0%,25%,100%{background-color:#ffe485}50%,75%{background-color:#ffd04c}}
 #remote-message-form{width:min(100%,34rem);margin:12px auto;text-align:left}
 #remote-message-form label{display:block;margin-bottom:6px;font-weight:700}
 .message-compose{display:grid;grid-template-columns:minmax(0,1fr) repeat(2,44px);gap:6px}
