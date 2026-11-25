@@ -649,14 +649,17 @@ for (const button of form.querySelectorAll("[data-minutes]")) {
     form.dispatchEvent(new Event("input"));
   };
 }
+function resetWatch() {
+  Object.assign(watch, { elapsed: 0, since: null, laps: [] });
+  rows.replaceChildren();
+}
+function resetTimer() {
+  Object.assign(timer, { remaining: 0, deadline: null, phase: "ready", message: "" });
+  clearTimeout(expiration);
+}
 reset.onclick = () => {
-  if (mode === "watch") {
-    Object.assign(watch, { elapsed: 0, since: null, laps: [] });
-    rows.replaceChildren();
-  } else {
-    Object.assign(timer, { remaining: 0, deadline: null, phase: "ready", message: "" });
-    clearTimeout(expiration);
-  }
+  if (mode === "watch") resetWatch();
+  else resetTimer();
   refresh();
 };
 function updateLapTimes(row, index) {
@@ -687,6 +690,6 @@ keepScreenOn();
 </script>
 <script src="./qrcode.js"></script>
 <script src="./jsqr.js"></script>
-<script src="./remote-control.js?v=21"></script>
+<script src="./remote-control.js?v=22"></script>
 </body>
 </html>

@@ -115,7 +115,13 @@
   }
 
   function endHost(message) {
+    const hadSession = Boolean(hostSession);
     hostSession = null;
+    if (hadSession) {
+      resetWatch();
+      resetTimer();
+      refresh();
+    }
     document.body.classList.remove("paired-display");
     byId("pair-code").replaceChildren();
     shareButton.hidden = true;
@@ -313,7 +319,7 @@
     button.disabled = true;
     try {
       await request(session.token, "DELETE");
-      endHost("Sessão encerrada.");
+      if (hostSession === session) endHost("Sessão encerrada.");
     } catch {
       pairStatus.textContent = "Não foi possível encerrar. Confira a internet e tente novamente.";
     } finally {
@@ -402,6 +408,10 @@
         remoteSession = null;
         remoteSnapshot = null;
         paintRemoteAlert(0, false, false);
+        byId("remote-clock").textContent = "00:00:00";
+        const laps = byId("remote-laps");
+        laps.replaceChildren();
+        laps.hidden = true;
         remoteStatus.textContent = "Sessão encerrada ou expirada.";
         remoteModes.concat(remoteActions).forEach(button => { button.disabled = true; });
         remoteDuration.disabled = true;
