@@ -97,8 +97,8 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
 #panel{position:relative}
 #panel::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none}
 #panel.timer-warning{--timer-alert:#e99612;--alert-inset:8px;--alert-outset:5px}
+#panel:is(.timer-final-minute,.done){--timer-alert:#ff7569}
 #panel.done{
-  --timer-alert:#ff7569;
   --alert-inset:11px;
   --alert-outset:7px;
   --expiry-edge-opacity:.82;
@@ -332,7 +332,9 @@ function buildClock() {
 }
 function drawClock(animate = true) {
   const remaining = timer.deadline === null ? timer.remaining : timer.deadline - Date.now();
-  panel.classList.toggle("timer-warning", mode === "timer" && timer.phase === "running" && remaining > 0 && remaining <= 5 * 60 * 1000);
+  const countdownActive = mode === "timer" && timer.phase === "running" && remaining > 0;
+  panel.classList.toggle("timer-warning", countdownActive && remaining <= 5 * 60 * 1000);
+  panel.classList.toggle("timer-final-minute", countdownActive && remaining <= 60 * 1000);
   const milliseconds = mode === "watch" ? elapsed() : Math.abs(Math.ceil(remaining / 1000)) * 1000;
   panel.classList.toggle("expiry-dim", mode === "timer" && timer.phase === "finished" && Math.floor(-remaining / 700) % 2 === 1);
   const values = parts(milliseconds);
