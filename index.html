@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Cronômetro com voltas e temporizador configurável.">
+<title>Tempo na Tela</title>
+<meta name="theme-color" content="#2154cb">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="icon" type="image/png" href="./icon-192.png">
+<style>
+:root{color-scheme:light;--bg:#eef2fa;--panel:#fff;--text:#17243f;--muted:#56637e;--line:#dbe2ef;--accent:#2154cb;--soft:#e7eeff;--tile:#162746;--tile-bottom:#1c3155;--digits:#fff;--shadow:#243b621c}
+:root[data-theme=dark]{color-scheme:dark;--bg:#101625;--panel:#1a2336;--text:#edf2ff;--muted:#abb9d2;--line:#35435e;--accent:#a9c2ff;--soft:#283963;--tile:#293d66;--tile-bottom:#304775;--shadow:#0004}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:1rem system-ui,sans-serif}button,input{font:inherit}button{cursor:pointer;color:inherit}button:disabled{opacity:.48;cursor:default}button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:3px}[hidden]{display:none!important}
+.shell{width:min(100% - 32px,820px);margin:0 auto}header{min-height:90px;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.05em;font-size:1.35rem}.mark{display:block;width:38px;height:38px;flex:none;object-fit:contain}.btn{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 16px;font-weight:650;min-height:44px}.btn:hover:not(:disabled){background:var(--soft)}main{padding:18px 0 38px}.panel{background:var(--panel);border:1px solid var(--line);box-shadow:0 14px 45px var(--shadow);border-radius:26px;padding:clamp(16px,5vw,42px)}nav{display:flex;width:max-content;max-width:100%;margin:0 auto 34px;background:var(--bg);padding:4px;border-radius:14px;gap:4px}nav button{background:transparent;border:0;border-radius:10px;padding:10px clamp(9px,3vw,22px);font-weight:700;min-height:44px}nav [aria-pressed=true]{background:var(--soft);color:var(--accent)}
+.clock{display:flex;justify-content:center;align-items:flex-start;gap:clamp(3px,1.4vw,12px)}.unit{text-align:center;min-width:0}.tile{width:clamp(48px,14vw,128px);height:clamp(65px,16.5vw,138px);background:linear-gradient(var(--tile) 50%,var(--tile-bottom) 50%);border-radius:clamp(8px,2vw,18px);position:relative;display:grid;place-items:center;color:var(--digits);font-size:clamp(31px,9vw,79px);font-weight:800;letter-spacing:-.06em;font-variant-numeric:tabular-nums;perspective:380px}.tile::after{content:"";position:absolute;inset:50% 0 auto;height:2px;background:#0005;pointer-events:none}.flap{position:absolute;inset:0;display:grid;place-items:center;background:inherit;border-radius:inherit;clip-path:inset(0 0 50% 0);animation:flip .29s ease-in forwards}@keyframes flip{to{transform:rotateX(-92deg);opacity:.3}}.sep{font-size:clamp(17px,4vw,35px);line-height:clamp(65px,16.5vw,138px);color:var(--muted)}.label{margin-top:10px;display:block;color:var(--muted);font-size:clamp(.72rem,2.5vw,.9rem)}.duration{display:flex;justify-content:center;gap:10px;margin:24px auto 0;max-width:310px}.duration label{flex:1;min-width:0;text-align:center;color:var(--muted);font-size:.875rem}.duration input{width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 4px;text-align:center;background:var(--bg);color:var(--text);margin-top:5px}
+.controls{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:25px}.primary{background:var(--accent);color:var(--bg);min-width:106px;border-color:transparent}.primary:hover:not(:disabled){background:var(--accent);filter:brightness(.9)}#status{margin:18px 0 0;text-align:center;color:var(--muted);font-size:.9rem;min-height:1.35em}.done #status{font-size:1rem;font-weight:800;color:var(--accent)}.laps{margin-top:20px}.laps h2{font-size:1.1rem;margin:0 0 12px}table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,td{text-align:right;padding:9px 4px;border-bottom:1px solid var(--line)}th:first-child,td:first-child{text-align:left}th{font-size:.85rem;color:var(--muted)}
+dialog{color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:20px;width:min(400px,100% - 28px);padding:24px}dialog::backdrop{background:#0b132a99}dialog h2{margin:0 0 18px}dialog label{display:flex;justify-content:space-between;align-items:center;padding:10px 0;gap:8px}dialog select{font:inherit}dialog input{width:20px;height:20px;accent-color:var(--accent)}dialog p{color:var(--muted);font-size:.875rem}dialog .btn{width:100%;margin-top:8px}
+html:fullscreen{background:var(--bg);overflow:auto}
+.header-actions{display:flex;align-items:center;gap:8px}
+#fullscreen{width:44px;padding:0}
+#fullscreen-message{margin:0 0 12px;color:var(--muted);text-align:right;font-size:.875rem}
+.local-clock{display:flex;align-items:baseline;justify-content:flex-end;flex-wrap:wrap;gap:.2rem .75rem;margin:0 0 12px;color:var(--muted);font-size:.875rem}
+.local-clock time{color:var(--text);font-weight:700;font-variant-numeric:tabular-nums}
+.action-button{display:inline-flex;align-items:center;justify-content:center;gap:.45rem}
+.button-icon{width:1.15em;height:1.15em;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.shell{width:min(100% - 2rem,68rem)}
+.panel{container-type:inline-size}
+.clock{width:min(100%,48rem);margin-inline:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr) auto) minmax(0,1fr)}
+.clock:not([data-centiseconds]){width:min(100%,38rem);grid-template-columns:repeat(2,minmax(0,1fr) auto) minmax(0,1fr)}
+.tile{width:100%;height:auto;aspect-ratio:1.08;min-height:0;font-size:clamp(1.5rem,10cqi,6.25rem)}
+.sep{display:grid;place-items:center;line-height:1;align-self:start;height:clamp(36px,18cqi,160px)}
+.label{font-size:clamp(.65rem,2.8cqi,.95rem);overflow-wrap:anywhere}
+@media(max-width:400px){
+  .shell{width:calc(100% - 1rem)}
+  header{min-height:65px;gap:8px}
+  .brand{font-size:1.15rem;gap:7px}
+  #settings{padding-inline:9px;font-size:.875rem}
+  .panel{padding:12px}
+  nav{width:100%;margin-bottom:20px}
+  nav button{flex:1;padding-inline:4px;font-size:.875rem}
+  .controls .btn{padding-inline:10px}
+}
+@media(max-width:420px){
+  #settings{min-width:44px}
+  #settings .button-label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+}
+@media(orientation:landscape) and (max-height:540px){
+  header{min-height:54px}
+  main{padding:4px 0 16px}
+  .panel{padding:12px 16px}
+  nav{margin-bottom:8px}
+
+  .clock,.clock:not([data-centiseconds]){width:min(100%,54vh)}
+  .clock[data-centiseconds]{width:min(100%,70vh)}
+  .tile{font-size:clamp(1.35rem,10vh,3.3rem)}
+  .sep{height:13vh}
+  .label{margin-top:4px}
+  .duration,.controls{margin-top:8px}
+  #status{margin-top:8px}
+}
+#panel{position:relative}
+#panel::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none}
+#panel.timer-warning{--timer-alert:#e99612;--alert-inset:8px;--alert-outset:5px}
+#panel.done{--timer-alert:#ff7569;--alert-inset:11px;--alert-outset:7px}
+#panel:is(.timer-warning,.done)::after{
+  box-shadow:inset 0 0 0 var(--alert-inset) var(--timer-alert),0 0 0 var(--alert-outset) var(--timer-alert);
+  animation:timer-blink 1.4s steps(1,end) infinite;
+}
+@keyframes timer-blink{0%,100%{opacity:.82} 50%{opacity:.08}}
+#overtime-sign{display:block;text-align:center;color:var(--timer-alert,var(--accent));font-size:1.65rem;font-weight:800;line-height:1;margin-bottom:10px}
+#panel.done .tile{color:var(--timer-alert)}
+@media(prefers-reduced-motion:reduce){.flap{display:none}}
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="icon-settings" viewBox="0 0 24 24">
+    <path d="M3 6h5m4 0h9M3 12h10m4 0h4M3 18h3m4 0h11"/>
+    <circle cx="10" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="8" cy="18" r="2"/>
+  </symbol>
+  <symbol id="icon-play" viewBox="0 0 24 24"><path d="m8 5 12 7-12 7z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="icon-pause" viewBox="0 0 24 24"><path d="M9 5v14m6-14v14" stroke-width="2.5"/></symbol>
+  <symbol id="icon-reset" viewBox="0 0 24 24"><path d="M4 10a8 8 0 1 1 1 7M4 4v6h6"/></symbol>
+  <symbol id="icon-lap" viewBox="0 0 24 24"><path d="M5 21V4c4-4 9 4 14 0v10c-5 4-10-4-14 0"/></symbol>
+  <symbol id="icon-expand" viewBox="0 0 24 24"><path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5"/></symbol>
+  <symbol id="icon-contract" viewBox="0 0 24 24"><path d="M4 9h5V4m11 5h-5V4M9 20v-5H4m11 5v-5h5"/></symbol>
+  <symbol id="icon-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+</svg>
+<header class="shell"><h1 class="brand" style="margin:0"><img class="mark" src="./icon-192.png" width="38" height="38" alt="">Tempo na Tela</h1><div class="header-actions"><button class="btn action-button" id="fullscreen" aria-label="Entrar em tela cheia" title="Entrar em tela cheia"><svg class="button-icon" aria-hidden="true" focusable="false"><use id="fullscreen-icon" href="#icon-expand"/></svg></button><button class="btn action-button" id="settings"><svg class="button-icon" aria-hidden="true" focusable="false"><use href="#icon-settings"/></svg><span class="button-label">Configurações</span></button></div></header>
+<main class="shell">
+<div class="local-clock" role="group" aria-label="Data e hora local"><span id="local-date"></span><time id="local-time"></time></div>
+<p id="fullscreen-message" role="status" hidden></p>
+<section class="panel" id="panel" aria-labelledby="watch">
+<nav aria-label="Modo do relógio"><button id="watch" aria-pressed="true">Cronômetro</button><button id="timer" aria-pressed="false">Temporizador</button></nav>
+<span id="overtime-sign" aria-hidden="true" hidden>−</span>
+<div class="clock" id="clock" role="timer" aria-live="off"></div>
+<form class="duration" id="duration" aria-label="Duração" hidden>
+<label>Horas<input id="hours" type="number" inputmode="numeric" min="0" max="99" step="1" value="0" required></label>
+<label>Minutos<input id="minutes" type="number" inputmode="numeric" min="0" max="59" step="1" value="0" required></label>
+<label>Segundos<input id="seconds" type="number" inputmode="numeric" min="0" max="59" step="1" value="0" required></label>
+</form>
+<div class="controls"><button class="btn action-button" id="reset" disabled><svg class="button-icon" aria-hidden="true" focusable="false"><use href="#icon-reset"/></svg><span class="button-label">Zerar</span></button><button class="btn primary action-button" id="start"><svg class="button-icon" aria-hidden="true" focusable="false"><use id="start-icon" href="#icon-play"/></svg><span class="button-label" id="start-label">Iniciar</span></button><button class="btn action-button" id="lap" disabled><svg class="button-icon" aria-hidden="true" focusable="false"><use href="#icon-lap"/></svg><span class="button-label">Registrar volta</span></button></div>
+<p id="status" role="status"></p>
+<section class="laps" id="laps" hidden><h2>Voltas</h2><table><thead><tr><th scope="col">Volta</th><th scope="col">Parcial</th><th scope="col">Total</th></tr></thead><tbody id="rows"></tbody></table></section>
+</section>
+</main>
+<dialog id="dialog" aria-labelledby="settings-title">
+<h2 id="settings-title">Configurações</h2>
+<label>Tema <select id="theme"><option value="light">Claro</option><option value="dark">Escuro</option></select></label>
+<label>Exibir centésimos no cronômetro <input id="centiseconds" type="checkbox"></label>
+<label>Som ao terminar <input id="sound" type="checkbox"></label>
+<label>Vibração ao terminar <input id="vibration" type="checkbox"></label>
+<button class="btn" id="install-app" type="button" hidden>Instalar app</button>
+<p id="install-help" hidden>Para instalar, use a opção de instalação do navegador. No Safari do iPhone, use Compartilhar e toque em Adicionar à Tela de Início.</p>
+<p id="screen-status"></p>
+<p id="support" hidden>Este navegador não oferece vibração.</p>
+<form method="dialog"><button class="btn action-button"><svg class="button-icon" aria-hidden="true" focusable="false"><use href="#icon-close"/></svg><span>Fechar</span></button></form>
+</dialog>
+<script>
+const byId = id => document.getElementById(id);
+const installButton = byId("install-app");
+const installHelp = byId("install-help");
+let installPrompt;
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js").catch(error => console.error("Falha ao preparar o uso offline.", error));
+  installHelp.hidden = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+}
+window.addEventListener("beforeinstallprompt", event => {
+  event.preventDefault();
+  installPrompt = event;
+  installButton.hidden = false;
+  installHelp.hidden = true;
+});
+installButton.onclick = async () => {
+  installButton.hidden = true;
+  try {
+    await installPrompt.prompt();
+    const choice = await installPrompt.userChoice;
+    installHelp.hidden = choice.outcome === "accepted";
+  } catch {
+    installHelp.hidden = false;
+  } finally {
+    installPrompt = null;
+  }
+};
+window.addEventListener("appinstalled", () => {
+  installPrompt = null;
+  installButton.hidden = true;
+  installHelp.hidden = true;
+});
+
+const fullscreenButton = byId("fullscreen");
+const fullscreenMessage = byId("fullscreen-message");
+
+function updateFullscreenButton() {
+  const active = Boolean(document.fullscreenElement);
+  const label = active ? "Sair da tela cheia" : "Entrar em tela cheia";
+  fullscreenButton.setAttribute("aria-label", label);
+  fullscreenButton.title = label;
+  byId("fullscreen-icon").setAttribute("href", active ? "#icon-contract" : "#icon-expand");
+}
+
+fullscreenButton.onclick = async () => {
+  fullscreenMessage.hidden = true;
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else await document.documentElement.requestFullscreen();
+  } catch {
+    fullscreenMessage.textContent = "A tela cheia está indisponível neste navegador.";
+    fullscreenMessage.hidden = false;
+  }
+};
+document.addEventListener("fullscreenchange", updateFullscreenButton);
+
+const localDate = byId("local-date");
+const localTime = byId("local-time");
+const dateFormat = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+const timeFormat = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" });
+let localClockTimeout;
+
+function updateLocalClock() {
+  clearTimeout(localClockTimeout);
+  if (document.visibilityState !== "visible") return;
+  const now = new Date();
+  const date = dateFormat.format(now);
+  const time = timeFormat.format(now);
+  if (localDate.textContent !== date) localDate.textContent = date;
+  localTime.textContent = time;
+  localTime.dateTime = time;
+  localClockTimeout = setTimeout(updateLocalClock, 1000 - Date.now() % 1000);
+}
+
+document.addEventListener("visibilitychange", updateLocalClock);
+window.addEventListener("pageshow", updateLocalClock);
+updateLocalClock();
+const clock = byId("clock");
+const panel = byId("panel");
+const overtimeSign = byId("overtime-sign");
+const form = byId("duration");
+const fields = ["hours", "minutes", "seconds"].map(byId);
+const start = byId("start");
+const reset = byId("reset");
+const lap = byId("lap");
+const status = byId("status");
+const rows = byId("rows");
+const theme = byId("theme");
+const centiseconds = byId("centiseconds");
+const sound = byId("sound");
+const vibration = byId("vibration");
+const watch = { elapsed: 0, since: null, laps: [] };
+const timer = { remaining: 0, deadline: null, phase: "ready", message: "" };
+let mode = "watch";
+let tiles = [];
+let audio;
+let frame = 0;
+let expiration = 0;
+let screenLock;
+let screenRequestPending = false;
+const screenStatus = byId("screen-status");
+
+async function keepScreenOn() {
+  if (!navigator.wakeLock) {
+    screenStatus.textContent = "Este navegador não permite manter a tela ligada pelo app.";
+    return;
+  }
+  if (document.visibilityState !== "visible" || screenRequestPending || (screenLock && !screenLock.released)) return;
+
+  screenRequestPending = true;
+  try {
+    const lock = await navigator.wakeLock.request("screen");
+    screenLock = lock;
+    screenStatus.textContent = "Tela ativa enquanto o Tempo na Tela estiver visível.";
+    lock.addEventListener("release", () => {
+      if (screenLock !== lock) return;
+      screenLock = null;
+      screenStatus.textContent = "O navegador liberou a tela ativa.";
+    }, { once: true });
+  } catch {
+    screenStatus.textContent = "O navegador não conseguiu manter a tela ligada.";
+  } finally {
+    screenRequestPending = false;
+  }
+}
+
+function readPreference(key) {
+  try { return localStorage.getItem("compasso." + key); } catch { return null; }
+}
+function savePreference(key, value) {
+  try { localStorage.setItem("compasso." + key, value); } catch {}
+}
+theme.value = readPreference("theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+centiseconds.checked = readPreference("centiseconds") === "true";
+sound.checked = readPreference("sound") === "true";
+vibration.checked = readPreference("vibration") === "true";
+document.documentElement.dataset.theme = theme.value;
+byId("support").hidden = typeof navigator.vibrate === "function";
+theme.onchange = () => {
+  document.documentElement.dataset.theme = theme.value;
+  savePreference("theme", theme.value);
+};
+async function prepareAudio() {
+  if (!sound.checked) return;
+  try {
+    const Audio = window.AudioContext || window.webkitAudioContext;
+    if (Audio) {
+      audio ??= new Audio();
+      await audio.resume();
+    }
+  } catch {}
+}
+sound.onchange = () => {
+  savePreference("sound", sound.checked);
+  prepareAudio();
+};
+centiseconds.onchange = () => {
+  savePreference("centiseconds", centiseconds.checked);
+  if (mode === "watch") {
+    buildClock();
+    refresh();
+  }
+  for (const row of rows.rows) updateLapTimes(row, Number(row.cells[0].textContent) - 1);
+};
+vibration.onchange = () => savePreference("vibration", vibration.checked);
+byId("settings").onclick = () => byId("dialog").showModal();
+
+const pad = value => String(value).padStart(2, "0");
+function parts(milliseconds) {
+  const seconds = Math.floor(milliseconds / 1000);
+  return [pad(Math.floor(seconds / 3600)), pad(Math.floor(seconds / 60) % 60), pad(seconds % 60), pad(Math.floor(milliseconds / 10) % 100)];
+}
+function formatted(milliseconds) {
+  const [h, m, s, c] = parts(milliseconds);
+  return h + ":" + m + ":" + s + (centiseconds.checked ? "," + c : "");
+}
+function elapsed() {
+  return watch.elapsed + (watch.since === null ? 0 : performance.now() - watch.since);
+}
+function configuredDuration() {
+  if (!fields.every(field => field.validity.valid)) return 0;
+  const [h, m, s] = fields.map(field => field.valueAsNumber);
+  return ((h * 60 + m) * 60 + s) * 1000;
+}
+function buildClock() {
+  const showCentiseconds = mode === "watch" && centiseconds.checked;
+  const labels = ["Horas", "Minutos", "Segundos"];
+  if (showCentiseconds) labels.push("Centésimos");
+  clock.toggleAttribute("data-centiseconds", showCentiseconds);
+  clock.replaceChildren();
+  tiles = labels.map((label, index) => {
+    if (index) {
+      const separator = document.createElement("span");
+      separator.className = "sep";
+      separator.textContent = index === 3 ? "," : ":";
+      clock.append(separator);
+    }
+    const unit = document.createElement("div");
+    unit.className = "unit";
+    unit.innerHTML = '<div class="tile"><span></span></div><span class="label"></span>';
+    unit.lastElementChild.textContent = label;
+    clock.append(unit);
+    return unit.firstElementChild;
+  });
+}
+function drawClock(animate = true) {
+  const remaining = timer.deadline === null ? timer.remaining : timer.deadline - Date.now();
+  panel.classList.toggle("timer-warning", mode === "timer" && timer.phase === "running" && remaining > 0 && remaining <= 5 * 60 * 1000);
+  const milliseconds = mode === "watch" ? elapsed() : Math.abs(Math.ceil(remaining / 1000)) * 1000;
+  const values = parts(milliseconds);
+  tiles.forEach((tile, index) => {
+    if (!animate) tile.querySelector(".flap")?.remove();
+    const digit = tile.firstElementChild;
+    const previous = digit.textContent;
+    if (previous === values[index]) return;
+    digit.textContent = values[index];
+    if (!animate || !previous || index === 3) return;
+    tile.querySelector(".flap")?.remove();
+    const flap = document.createElement("span");
+    flap.className = "flap";
+    flap.textContent = previous;
+    flap.setAttribute("aria-hidden", "true");
+    tile.append(flap);
+    setTimeout(() => flap.remove(), 320);
+  });
+}
+function render() {
+  const stopwatch = mode === "watch";
+  const running = stopwatch ? watch.since !== null : timer.phase === "running";
+  const paused = stopwatch ? watch.elapsed > 0 : timer.phase === "paused";
+  const finished = !stopwatch && timer.phase === "finished";
+  start.hidden = finished;
+  byId("start-icon").setAttribute("href", running ? "#icon-pause" : "#icon-play");
+  byId("start-label").textContent = running ? "Pausar" : paused ? "Retomar" : "Iniciar";
+  reset.disabled = stopwatch ? !running && !paused : timer.phase === "ready" && !timer.message;
+  lap.hidden = !stopwatch;
+  lap.disabled = watch.since === null;
+  byId("laps").hidden = !stopwatch || !watch.laps.length;
+  form.hidden = stopwatch || running || paused || finished;
+  panel.classList.toggle("done", finished);
+  overtimeSign.hidden = !finished;
+  status.textContent = stopwatch ? (running ? "Em andamento" : paused ? "Pausado" : "Pronto para iniciar") :
+    timer.message || (finished ? "Tempo esgotado! Contando o tempo excedido." : running ? "Contagem regressiva" : paused ? "Pausado" : "Digite a duração para começar");
+  drawClock(false);
+}
+function notify() {
+  if (vibration.checked) navigator.vibrate?.([200, 100, 200, 100, 350]);
+  if (!sound.checked || audio?.state !== "running") return;
+  for (const [index, frequency] of [660, 880, 990].entries()) {
+    const at = audio.currentTime + index * 0.24;
+    const tone = audio.createOscillator();
+    const volume = audio.createGain();
+    tone.frequency.value = frequency;
+    volume.gain.setValueAtTime(0.001, at);
+    volume.gain.exponentialRampToValueAtTime(0.18, at + 0.02);
+    volume.gain.exponentialRampToValueAtTime(0.001, at + 0.22);
+    tone.connect(volume).connect(audio.destination);
+    tone.start(at);
+    tone.stop(at + 0.23);
+  }
+}
+function checkExpiration() {
+  if (timer.phase !== "running" || Date.now() < timer.deadline) return;
+  timer.phase = "finished";
+  clearTimeout(expiration);
+  if (mode === "timer") render();
+  notify();
+}
+function scheduleExpiration() {
+  clearTimeout(expiration);
+  if (timer.deadline !== null) {
+    expiration = setTimeout(() => {
+      checkExpiration();
+      if (timer.phase === "running") scheduleExpiration();
+    }, Math.max(1, timer.deadline - Date.now()));
+  }
+}
+function animate() {
+  checkExpiration();
+  drawClock();
+  frame = (mode === "watch" ? watch.since !== null : timer.deadline !== null) ? requestAnimationFrame(animate) : 0;
+}
+function refresh() {
+  render();
+  if (!frame) frame = requestAnimationFrame(animate);
+}
+function selectMode(next) {
+  if (mode === next && tiles.length) return;
+  mode = next;
+  byId("watch").setAttribute("aria-pressed", String(next === "watch"));
+  byId("timer").setAttribute("aria-pressed", String(next === "timer"));
+  byId("panel").setAttribute("aria-labelledby", next);
+  buildClock();
+  refresh();
+}
+byId("watch").onclick = () => selectMode("watch");
+byId("timer").onclick = () => selectMode("timer");
+start.onclick = () => {
+  if (mode === "watch") {
+    if (watch.since === null) watch.since = performance.now();
+    else {
+      watch.elapsed = elapsed();
+      watch.since = null;
+    }
+  } else {
+    checkExpiration();
+    if (timer.phase === "finished") return;
+    if (timer.deadline !== null) {
+      timer.remaining = Math.max(0, timer.deadline - Date.now());
+      timer.deadline = null;
+      timer.phase = "paused";
+    } else {
+      if (timer.phase !== "paused") {
+        if (!form.reportValidity()) return;
+        timer.remaining = configuredDuration();
+        if (!timer.remaining) {
+          timer.message = "Digite uma duração maior que zero.";
+          render();
+          return;
+        }
+      }
+      prepareAudio();
+      timer.message = "";
+      timer.deadline = Date.now() + timer.remaining;
+      timer.phase = "running";
+    }
+    scheduleExpiration();
+  }
+  refresh();
+};
+form.onsubmit = event => {
+  event.preventDefault();
+  start.click();
+};
+form.oninput = () => {
+  timer.remaining = configuredDuration();
+  timer.phase = "ready";
+  timer.message = "";
+  render();
+};
+reset.onclick = () => {
+  if (mode === "watch") {
+    Object.assign(watch, { elapsed: 0, since: null, laps: [] });
+    rows.replaceChildren();
+  } else {
+    Object.assign(timer, { remaining: 0, deadline: null, phase: "ready", message: "" });
+    clearTimeout(expiration);
+  }
+  refresh();
+};
+function updateLapTimes(row, index) {
+  const total = watch.laps[index];
+  const partial = total - (watch.laps[index - 1] ?? 0);
+  row.cells[1].textContent = formatted(partial);
+  row.cells[2].textContent = formatted(total);
+}
+lap.onclick = () => {
+  if (watch.since === null) return;
+  watch.laps.push(elapsed());
+  const row = rows.insertRow(0);
+  row.insertCell().textContent = watch.laps.length;
+  row.insertCell();
+  row.insertCell();
+  updateLapTimes(row, watch.laps.length - 1);
+  byId("laps").hidden = false;
+};
+document.addEventListener("visibilitychange", () => {
+  checkExpiration();
+  refresh();
+  keepScreenOn();
+});
+window.addEventListener("pageshow", keepScreenOn);
+document.addEventListener("click", keepScreenOn);
+selectMode("watch");
+keepScreenOn();
+</script>
+</body>
+</html>
