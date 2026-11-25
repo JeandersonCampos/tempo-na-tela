@@ -189,12 +189,18 @@ body.paired-display main{padding-top:8px}
 #dialog input[role=switch]:checked::after{left:21px;background:var(--bg)}
 .settings-group p{margin:5px 0 0}
 #test-alert-status:empty,#screen-status:empty{display:none}
-#display-message{position:relative;z-index:2;margin:0 0 8px;padding:.55em .85em;border:1px solid var(--accent);border-radius:12px;background:var(--panel);color:var(--text);text-align:center;font-size:clamp(1rem,3vw,2.25rem);font-weight:750;line-height:1.25;overflow-wrap:anywhere}
+#display-message{position:relative;z-index:2;margin:0 0 8px;padding:.45em 0;border:1px solid #b98500;border-radius:12px;background:#ffdf60;color:#231a00;text-align:center;font-size:clamp(1.4rem,min(5vw,8dvh),3.8rem);font-weight:850;line-height:1.2}
+#display-message-window{display:block;overflow:hidden;margin-inline:.65em}
+#display-message-text{display:inline-block;white-space:nowrap}
+#display-message.is-scrolling #display-message-window{text-align:start}
+#display-message.is-scrolling #display-message-text{animation:display-marquee var(--scroll-duration) linear infinite}
+@keyframes display-marquee{from{transform:translateX(-100%)}to{transform:translateX(var(--scroll-width))}}
 #remote-message-form{width:min(100%,34rem);margin:12px auto;text-align:left}
 #remote-message-form label{display:block;margin-bottom:6px;font-weight:700}
-#remote-message-input{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text);font:inherit}
-#remote-message-form .controls{justify-content:flex-start;margin-top:8px}
-#remote-message-form .btn{flex-direction:row}
+.message-compose{display:grid;grid-template-columns:minmax(0,1fr) repeat(2,44px);gap:6px}
+#remote-message-input{width:100%;min-width:0;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text);font:inherit}
+.message-compose .btn{padding:0;min-width:0}
+#remote-message-stop{margin-top:8px}
 #remote-message-feedback:empty{display:none}
 </style>
 </head>
@@ -217,7 +223,7 @@ body.paired-display main{padding-top:8px}
 </svg>
 <header class="shell"><h1 class="brand" style="margin:0"><img class="mark" src="./icon-192.png" width="38" height="38" alt="">Tempo na Tela</h1><button class="btn" id="pair-open" type="button">Conectar controle</button></header>
 <main class="shell">
-<p id="display-message" role="status" hidden></p>
+<p id="display-message" role="status" hidden><span id="display-message-window"><span id="display-message-text"></span></span></p>
 <section class="panel" id="panel" aria-labelledby="watch">
 <nav aria-label="Modo do relógio"><button id="watch" aria-pressed="true">Cronômetro</button><button id="timer" aria-pressed="false">Temporizador</button></nav>
 <p id="status" role="status"></p>
@@ -256,11 +262,19 @@ body.paired-display main{padding-top:8px}
   </div>
   <form id="remote-message-form">
     <label for="remote-message-input">Mensagem para o visor</label>
-    <input id="remote-message-input" type="text" maxlength="140" autocomplete="off" disabled>
-    <div class="controls">
-      <button class="btn primary" id="remote-message-send" type="submit" disabled>Enviar mensagem para o visor</button>
-      <button class="btn" id="remote-message-clear" type="button" disabled>Limpar mensagem</button>
+    <div class="message-compose">
+      <input id="remote-message-input" type="text" maxlength="140" autocomplete="off" disabled>
+      <button class="btn primary action-button" id="remote-message-send" type="submit" aria-label="Enviar mensagem para o visor" title="Enviar mensagem para o visor" disabled>
+        <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4 20-7ZM22 2 11 13"/></svg>
+      </button>
+      <button class="btn action-button" id="remote-message-clear" type="button" aria-label="Limpar texto digitado" title="Limpar texto digitado" disabled>
+        <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m13 7 6 6M4 13l9-9a2 2 0 0 1 3 0l5 5a2 2 0 0 1 0 3l-8 8H8l-4-4a2 2 0 0 1 0-3Zm8 7h9"/></svg>
+      </button>
     </div>
+    <button class="btn action-button" id="remote-message-stop" type="button" hidden disabled>
+      <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+      Parar exibição
+    </button>
     <p id="remote-message-feedback" role="status"></p>
   </form>
   <p id="remote-status" role="status">Conectando ao visor…</p>
@@ -681,6 +695,6 @@ keepScreenOn();
 </script>
 <script src="./qrcode.js"></script>
 <script src="./jsqr.js"></script>
-<script src="./remote-control.js?v=23"></script>
+<script src="./remote-control.js?v=24"></script>
 </body>
 </html>

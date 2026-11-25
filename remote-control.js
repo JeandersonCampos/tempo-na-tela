@@ -8,9 +8,12 @@
   const remoteStatus = byId("remote-status");
   const remoteAlert = byId("remote-alert");
   const displayMessage = byId("display-message");
+  const messageWindow = byId("display-message-window");
+  const messageText = byId("display-message-text");
   const messageInput = byId("remote-message-input");
   const messageSend = byId("remote-message-send");
   const messageClear = byId("remote-message-clear");
+  const messageStop = byId("remote-message-stop");
   const messageFeedback = byId("remote-message-feedback");
   const remoteDuration = byId("remote-duration");
   const remoteActions = [...controller.querySelectorAll("[data-remote-action]")];
@@ -66,14 +69,31 @@
         duration: configuredDuration(),
       },
       centiseconds: centiseconds.checked,
-      displayMessage: displayMessage.textContent,
+      displayMessage: messageText.textContent,
     };
   }
 
+  function fitDisplayMessage() {
+    const width = messageWindow.clientWidth;
+    const textWidth = messageText.offsetWidth;
+    const overflowing = width > 0 && textWidth > width;
+    if (overflowing) {
+      displayMessage.style.setProperty("--scroll-width", width + "px");
+      displayMessage.style.setProperty("--scroll-duration", Math.max(4, (width + textWidth) / 100) + "s");
+    }
+    displayMessage.classList.toggle("is-scrolling", overflowing);
+  }
+
+  const messageResize = new ResizeObserver(fitDisplayMessage);
+  messageResize.observe(messageWindow);
+  messageResize.observe(messageText);
+
   function showDisplayMessage(message) {
     const text = typeof message === "string" ? message.slice(0, 140).trim() : "";
+    displayMessage.classList.remove("is-scrolling");
     displayMessage.hidden = !text;
-    displayMessage.textContent = text;
+    messageText.textContent = text;
+    fitDisplayMessage();
   }
 
   function applyCommand(command) {
@@ -379,7 +399,9 @@
     remoteDuration.disabled = locked;
     messageInput.disabled = locked;
     messageSend.disabled = locked || !messageInput.value.trim();
-    messageClear.disabled = locked || !data.displayMessage;
+    messageClear.disabled = !messageInput.value;
+    messageStop.hidden = !data.displayMessage;
+    messageStop.disabled = locked || !data.displayMessage;
     remoteModes.forEach(button => {
       button.setAttribute("aria-pressed", String(button.dataset.remoteMode === data.mode));
       button.disabled = locked;
@@ -435,7 +457,8 @@
         remoteStatus.textContent = "Sessão encerrada ou expirada.";
         remoteModes.concat(remoteActions).forEach(button => { button.disabled = true; });
         remoteDuration.disabled = true;
-        messageInput.disabled = messageSend.disabled = messageClear.disabled = true;
+        messageInput.disabled = messageSend.disabled = messageClear.disabled = messageStop.disabled = true;
+        messageStop.hidden = true;
         messageFeedback.textContent = "";
         return;
       }
@@ -522,9 +545,13 @@
   });
   async function sendMessage(text) {
     if (!remoteSnapshot) return;
-    messageFeedback.textContent = await send("message", remoteSnapshot.mode, undefined, text)
+    const draft = messageInput.value;
+    const accepted = await send("message", remoteSnapshot.mode, undefined, text);
+    if (accepted && text && messageInput.value === draft) messageInput.value = "";
+    messageFeedback.textContent = accepted
       ? (text ? "Mensagem enviada." : "Remoção solicitada.")
       : "Não foi possível enviar. Tente novamente.";
+    paintRemote();
   }
 
   messageInput.oninput = paintRemote;
@@ -533,7 +560,12 @@
     const text = messageInput.value.trim();
     if (text) sendMessage(text);
   };
-  messageClear.onclick = () => sendMessage("");
+  messageClear.onclick = () => {
+    messageInput.value = "";
+    paintRemote();
+    if (!messageInput.disabled) messageInput.focus();
+  };
+  messageStop.onclick = () => sendMessage("");
   readRemote(remoteSession);
   setInterval(paintRemote, 50);
 })();
