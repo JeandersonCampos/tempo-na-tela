@@ -1,6 +1,7 @@
 /* The publishable key is public. Row policies require the separate pairing token. */
 (() => {
-  const endpoint = "https://demtrwnxkalsuqturmmm.supabase.co/rest/v1/tempo_remote_sessions";
+  const lan = Boolean(document.querySelector('meta[name="tempo-lan"]'));
+  const endpoint = lan ? "/api/sessao" : "https://demtrwnxkalsuqturmmm.supabase.co/rest/v1/tempo_remote_sessions";
   const apiKey = "sb_publishable_rr0bW5un5PWYNbHKlTn4NA__vHL_Z46";
   const pairDialog = byId("pair-dialog");
   const controller = byId("remote-controller");
@@ -27,7 +28,7 @@
       cache: "no-store",
       method,
       headers: {
-        apikey: apiKey,
+        ...(lan ? {} : { apikey: apiKey }),
         "x-tempo-session": token,
         "Content-Type": "application/json",
         Prefer: "return=representation",
@@ -54,6 +55,11 @@
   }
 
   function applyCommand(command) {
+    if (command.action === "join") {
+      document.body.classList.add("paired-display");
+      if (pairDialog.open) pairDialog.close();
+      return;
+    }
     if (command.action === "mode" && ["watch", "timer"].includes(command.mode)) {
       selectMode(command.mode);
       return;
@@ -91,7 +97,7 @@
       const update = { snapshot: snapshot() };
       if (row.command) update.command = null;
       await request(session.token, "PATCH", update);
-      if (hostSession === session) pairStatus.textContent = "Compartilhe o QR code com seu celular.";
+      if (hostSession === session && scanner.hidden) pairStatus.textContent = "Para abrir este menu no visor pareado, toque nos números ou pressione Esc.";
     } catch {
       if (hostSession === session) pairStatus.textContent = "Conexão interrompida. Tentando reconectar.";
     }
@@ -100,6 +106,7 @@
 
   function endHost(message) {
     hostSession = null;
+    document.body.classList.remove("paired-display");
     byId("pair-code").replaceChildren();
     byId("pair-link").hidden = true;
     byId("pair-end").hidden = true;
@@ -108,8 +115,110 @@
     pairStatus.textContent = message;
   }
 
-  byId("pair-open").onclick = () => pairDialog.showModal();
+  function openPairDialog() {
+    if (!pairDialog.open) pairDialog.showModal();
+  }
+
+  byId("pair-open").onclick = openPairDialog;
+  panel.onclick = () => {
+    if (document.body.classList.contains("paired-display")) openPairDialog();
+  };
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && document.body.classList.contains("paired-display") && !pairDialog.open) openPairDialog();
+  });
+
+  const scanner = byId("scanner");
+  const video = byId("scan-video");
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  const scanFile = byId("scan-file");
+  let camera;
+  let scanFrame;
+  let scanning = false;
+
+  function stopScanner() {
+    scanning = false;
+    clearTimeout(scanFrame);
+    camera?.getTracks().forEach(track => track.stop());
+    camera = undefined;
+    video.srcObject = null;
+    video.hidden = true;
+    scanner.hidden = true;
+    scanFile.value = "";
+  }
+
+  function openScannedLink(value) {
+    let url;
+    try { url = new URL(value.trim()); } catch { return false; }
+    const allowed = url.origin === location.origin ||
+      (url.origin === "https://jeandersoncampos.github.io" && url.pathname === "/tempo-na-tela/") ||
+      (url.origin === "https://compasso-relogio.trimbetta32.chatgpt.site" && url.pathname === "/");
+    if (!allowed || url.username || url.password || !/^#controle=[0-9a-f]{64}$/.test(url.hash)) return false;
+    stopScanner();
+    if (url.origin === location.origin && url.pathname === location.pathname && url.search === location.search) {
+      history.replaceState(null, "", url.href);
+      location.reload();
+    } else {
+      location.assign(url.href);
+    }
+    return true;
+  }
+
+  function decode(source, width, height) {
+    if (!width || !height || !context) return false;
+    const scale = Math.min(1, 1200 / Math.max(width, height));
+    canvas.width = Math.round(width * scale);
+    canvas.height = Math.round(height * scale);
+    context.drawImage(source, 0, 0, canvas.width, canvas.height);
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(pixels.data, pixels.width, pixels.height);
+    return Boolean(code && openScannedLink(code.data));
+  }
+
+  function scanVideo() {
+    if (!scanning) return;
+    if (!decode(video, video.videoWidth, video.videoHeight)) scanFrame = setTimeout(scanVideo, 180);
+  }
+
+  byId("pair-scan").onclick = async () => {
+    if (scanning) return;
+    scanner.hidden = false;
+    scanning = true;
+    pairStatus.textContent = "Aponte a câmera para o QR code, selecione uma foto ou cole o link do controle.";
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) return;
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } } });
+      if (!scanning || !pairDialog.open) {
+        stream.getTracks().forEach(track => track.stop());
+        return;
+      }
+      camera = stream;
+      video.srcObject = stream;
+      video.hidden = false;
+      await video.play();
+      scanVideo();
+    } catch {
+      if (scanning) pairStatus.textContent = "Use uma foto do QR code ou cole o link do controle.";
+    }
+  };
+  scanFile.onchange = async () => {
+    const file = scanFile.files[0];
+    if (!file) return;
+    try {
+      const image = await createImageBitmap(file);
+      const found = decode(image, image.width, image.height);
+      image.close();
+      if (found) return;
+    } catch {}
+    pairStatus.textContent = "QR code inválido ou ilegível. Tente outra foto ou cole o link.";
+  };
+  byId("scan-form").onsubmit = event => {
+    event.preventDefault();
+    if (!openScannedLink(byId("scan-link").value)) pairStatus.textContent = "Use um link de controle gerado pelo Tempo na Tela.";
+  };
+  pairDialog.addEventListener("close", stopScanner);
   byId("pair-create").onclick = async () => {
+    stopScanner();
     byId("pair-create").disabled = true;
     pairStatus.textContent = "Criando sessão…";
     prepareAudio();
@@ -135,7 +244,7 @@
       byId("pair-create").hidden = true;
       syncHost(session);
     } catch {
-      endHost("Não foi possível conectar. Confira a internet e tente novamente.");
+      endHost(lan ? "Confira a rede local e tente novamente." : "Confira a internet e tente novamente.");
     }
   };
   byId("pair-end").onclick = async () => {
@@ -210,6 +319,8 @@
     list.reversed = true;
   }
 
+  let joined = false;
+
   async function readRemote(session) {
     if (remoteSession !== session) return;
     try {
@@ -231,6 +342,9 @@
         if (!enteredDuration) remoteDuration.value = row.snapshot.timer.duration ? row.snapshot.timer.duration / 1000 : "";
       }
       pending = row.command;
+      if (!joined && !pending && performance.now() - lastSeenAt < 5000) {
+        joined = await send("join", row.snapshot.mode);
+      }
       paintRemote();
     } catch {
       lastSeenAt = -Infinity;
@@ -241,15 +355,22 @@
 
   async function send(action, targetMode, seconds) {
     if (!remoteSession || !remoteSnapshot || sending || pending || performance.now() - lastSeenAt >= 5000) return;
-    const command = { id: crypto.randomUUID(), action, mode: targetMode, seconds };
+    const id = Array.from(crypto.getRandomValues(new Uint8Array(16)), byte => byte.toString(16).padStart(2, "0")).join("");
+    const command = { id, action, mode: targetMode, seconds };
     sending = true;
     paintRemote();
     try {
+      if (action === "end") {
+        await request(remoteSession, "DELETE");
+        location.replace("./");
+        return;
+      }
       const [row] = await request(remoteSession, "PATCH", { command }, "&command=is.null");
       if (row) {
         pending = row.command;
         if (action === "start") enteredDuration = false;
       }
+      return Boolean(row);
     } catch {
       lastSeenAt = -Infinity;
     } finally {

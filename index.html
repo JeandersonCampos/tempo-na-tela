@@ -138,6 +138,12 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
 #remote-clock{font-size:clamp(2rem,10vw,7rem);font-weight:800;font-variant-numeric:tabular-nums}
 #remote-duration{width:min(100%,14rem);margin:12px auto 0;padding:8px;text-align:center}
 #remote-laps{width:fit-content;margin-inline:auto}
+body.paired-display header,body.paired-display #panel nav,
+body.paired-display #panel .controls,body.paired-display #duration,
+body.paired-display #laps,body.paired-display #panel:not(.done) #status{display:none}
+body.paired-display main{padding-top:8px}
+#scan-video{display:block;width:100%;max-height:40dvh;background:#111;border-radius:12px}
+#scan-file,#scan-link{width:100%;margin-block:8px}
 </style>
 </head>
 <body>
@@ -192,6 +198,7 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
   </div>
   <p id="remote-status" role="status">Conectando ao visor…</p>
   <ol id="remote-laps" aria-label="Voltas registradas" hidden></ol>
+  <button class="btn" type="button" data-remote-action="end">Encerrar sessão</button>
   <a href="./">Voltar ao uso local</a>
 </section>
 </main>
@@ -199,7 +206,15 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
   <h2 id="pair-title">Conectar controle</h2>
   <p id="pair-status" role="status">Crie uma sessão e escaneie o QR code no celular. Quem tiver o link poderá controlar o visor.</p>
   <div id="pair-code"></div>
-  <a id="pair-link" href="./" hidden>Abrir link do controle</a>
+  <button class="btn" id="pair-scan" type="button">Escanear código</button>
+  <section id="scanner" hidden>
+    <video id="scan-video" muted playsinline hidden></video>
+    <label>Foto do QR code <input id="scan-file" type="file" accept="image/*" capture="environment"></label>
+    <form id="scan-form"><label>Link de controle <input id="scan-link" type="url" required></label>
+      <button class="btn" type="submit">Conectar pelo link</button>
+    </form>
+  </section>
+  <a id="pair-link" href="./" target="_blank" rel="noopener" hidden>Abrir link do controle</a>
   <button class="btn" id="pair-create" type="button">Gerar QR code</button>
   <button class="btn" id="pair-end" type="button" hidden>Encerrar sessão</button>
   <form method="dialog"><button class="btn">Fechar</button></form>
@@ -571,6 +586,7 @@ selectMode("watch");
 keepScreenOn();
 </script>
 <script src="./qrcode.js"></script>
+<script src="./jsqr.js"></script>
 <script src="./remote-control.js"></script>
 </body>
 </html>
