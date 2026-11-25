@@ -65,6 +65,25 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
   .clock{--card-height:clamp(128px,33dvh,270px)}
   .label{margin-top:6px}
 }
+@media(orientation:portrait){
+  .shell{max-width:43rem}
+  .clock,.clock:not([data-centiseconds]){
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    gap:clamp(8px,1.7dvh,16px);
+  }
+  .panel{--duration-space:0px}
+  .panel:has(.duration:not([hidden])){--duration-space:76px}
+  .clock{--card-height:clamp(86px,calc((100dvh - 292px - var(--duration-space)) / 2),300px)}
+  .clock[data-hours]{--card-height:clamp(84px,calc((100dvh - 316px - var(--duration-space)) / 3),230px)}
+  .clock[data-centiseconds]{--card-height:clamp(88px,calc((100dvh - 354px - var(--duration-space)) / 2),270px)}
+  .clock[data-hours][data-centiseconds]{--card-height:clamp(78px,calc((100dvh - 378px - var(--duration-space)) / 3),205px)}
+  .clock:not([data-hours])>.unit:first-child,.clock>.sep{display:none}
+  .tile{font-size:min(48cqi,calc(var(--card-height) * .84))}
+  .clock[data-centiseconds]>.unit:last-child{width:min(50%,11rem);justify-self:center}
+  .clock[data-centiseconds]>.unit:last-child .tile{height:46px;font-size:2rem}
+  .label{margin-top:4px}
+}
 @media(orientation:landscape) and (max-height:540px){
   header{min-height:45px}
   .clock{--card-height:clamp(74px,32dvh,164px);max-width:min(100%,120dvh)}
@@ -315,6 +334,7 @@ function drawClock(animate = true) {
   panel.classList.toggle("timer-warning", mode === "timer" && timer.phase === "running" && remaining > 0 && remaining <= 5 * 60 * 1000);
   const milliseconds = mode === "watch" ? elapsed() : Math.abs(Math.ceil(remaining / 1000)) * 1000;
   const values = parts(milliseconds);
+  clock.toggleAttribute("data-hours", values[0] !== "00");
   tiles.forEach((tile, index) => {
     if (!animate) tile.querySelector(".flap")?.remove();
     const digit = tile.firstElementChild;
