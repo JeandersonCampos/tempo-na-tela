@@ -13,7 +13,6 @@
   const messageInput = byId("remote-message-input");
   const messageSend = byId("remote-message-send");
   const messageClear = byId("remote-message-clear");
-  const messageStop = byId("remote-message-stop");
   const messageFeedback = byId("remote-message-feedback");
   const remoteDuration = byId("remote-duration");
   const remoteActions = [...controller.querySelectorAll("[data-remote-action]")];
@@ -380,6 +379,16 @@
     if (remoteAlert.textContent !== message) remoteAlert.textContent = message;
   }
 
+  function paintMessageButton(showing, locked) {
+    const label = showing ? "Parar exibição" : "Enviar mensagem para o visor";
+    messageSend.toggleAttribute("data-showing", showing);
+    if (messageSend.title !== label) {
+      messageSend.title = label;
+      messageSend.setAttribute("aria-label", label);
+    }
+    messageSend.disabled = locked || (!showing && !messageInput.value.trim());
+  }
+
   function paintRemote() {
     if (!remoteSnapshot) return;
     const data = remoteSnapshot;
@@ -398,10 +407,8 @@
     remoteDuration.hidden = !ready;
     remoteDuration.disabled = locked;
     messageInput.disabled = locked;
-    messageSend.disabled = locked || !messageInput.value.trim();
+    paintMessageButton(Boolean(data.displayMessage), locked);
     messageClear.disabled = !messageInput.value;
-    messageStop.hidden = !data.displayMessage;
-    messageStop.disabled = locked || !data.displayMessage;
     remoteModes.forEach(button => {
       button.setAttribute("aria-pressed", String(button.dataset.remoteMode === data.mode));
       button.disabled = locked;
@@ -457,8 +464,8 @@
         remoteStatus.textContent = "Sessão encerrada ou expirada.";
         remoteModes.concat(remoteActions).forEach(button => { button.disabled = true; });
         remoteDuration.disabled = true;
-        messageInput.disabled = messageSend.disabled = messageClear.disabled = messageStop.disabled = true;
-        messageStop.hidden = true;
+        messageInput.disabled = messageClear.disabled = true;
+        paintMessageButton(false, true);
         messageFeedback.textContent = "";
         return;
       }
@@ -555,15 +562,16 @@
   messageInput.oninput = paintRemote;
   byId("remote-message-form").onsubmit = event => {
     event.preventDefault();
-    const text = messageInput.value.trim();
-    if (text) sendMessage(text);
+    if (messageSend.disabled) return;
+    const showing = Boolean(remoteSnapshot?.displayMessage);
+    const text = showing ? "" : messageInput.value.trim();
+    if (showing || text) sendMessage(text);
   };
   messageClear.onclick = () => {
     messageInput.value = "";
     paintRemote();
     if (!messageInput.disabled) messageInput.focus();
   };
-  messageStop.onclick = () => sendMessage("");
   readRemote(remoteSession);
   setInterval(paintRemote, 50);
 })();

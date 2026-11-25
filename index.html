@@ -202,7 +202,8 @@ body.paired-display main{padding-top:8px}
 .message-compose{display:grid;grid-template-columns:minmax(0,1fr) repeat(2,44px);gap:6px}
 #remote-message-input{width:100%;min-width:0;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text);font:inherit}
 .message-compose .btn{padding:0;min-width:0}
-#remote-message-stop{margin-top:8px}
+#remote-message-send:not([data-showing]) .message-stop-icon,
+#remote-message-send[data-showing] .message-send-icon{display:none}
 #remote-message-feedback:empty{display:none}
 </style>
 </head>
@@ -267,16 +268,12 @@ body.paired-display main{padding-top:8px}
     <div class="message-compose">
       <input id="remote-message-input" type="text" maxlength="140" autocomplete="off" disabled>
       <button class="btn primary action-button" id="remote-message-send" type="submit" aria-label="Enviar mensagem para o visor" title="Enviar mensagem para o visor" disabled>
-        <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4 20-7ZM22 2 11 13"/></svg>
+        <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path class="message-send-icon" d="m22 2-7 20-4-9-9-4 20-7ZM22 2 11 13"/><rect class="message-stop-icon" x="6" y="6" width="12" height="12" rx="2"/></svg>
       </button>
       <button class="btn action-button" id="remote-message-clear" type="button" aria-label="Limpar texto digitado" title="Limpar texto digitado" disabled>
         <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m13 7 6 6M4 13l9-9a2 2 0 0 1 3 0l5 5a2 2 0 0 1 0 3l-8 8H8l-4-4a2 2 0 0 1 0-3Zm8 7h9"/></svg>
       </button>
     </div>
-    <button class="btn action-button" id="remote-message-stop" type="button" hidden disabled>
-      <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
-      Parar exibição
-    </button>
     <p id="remote-message-feedback" role="status"></p>
   </form>
   <p id="remote-status" role="status">Conectando ao visor…</p>
@@ -697,6 +694,6 @@ keepScreenOn();
 </script>
 <script src="./qrcode.js"></script>
 <script src="./jsqr.js"></script>
-<script src="./remote-control.js?v=25"></script>
+<script src="./remote-control.js?v=26"></script>
 </body>
 </html>

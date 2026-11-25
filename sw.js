@@ -1,8 +1,8 @@
 const scope = self.registration.scope;
 const cachePrefix = "tempo-na-tela:" + scope + ":";
-const cacheName = cachePrefix + "v32";
+const cacheName = cachePrefix + "v33";
 const home = new URL("./", scope).href;
-const assets = ["./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./remote-control.js?v=25", "./qrcode.js", "./jsqr.js"]
+const assets = ["./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./remote-control.js?v=26", "./qrcode.js", "./jsqr.js"]
   .map(path => new URL(path, scope).href);
 
 self.addEventListener("install", event => {
