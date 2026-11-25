@@ -7,6 +7,11 @@
   const controller = byId("remote-controller");
   const remoteStatus = byId("remote-status");
   const remoteAlert = byId("remote-alert");
+  const displayMessage = byId("display-message");
+  const messageInput = byId("remote-message-input");
+  const messageSend = byId("remote-message-send");
+  const messageClear = byId("remote-message-clear");
+  const messageFeedback = byId("remote-message-feedback");
   const remoteDuration = byId("remote-duration");
   const remoteActions = [...controller.querySelectorAll("[data-remote-action]")];
   const remoteModes = [...controller.querySelectorAll("[data-remote-mode]")];
@@ -61,10 +66,21 @@
         duration: configuredDuration(),
       },
       centiseconds: centiseconds.checked,
+      displayMessage: displayMessage.textContent,
     };
   }
 
+  function showDisplayMessage(message) {
+    const text = typeof message === "string" ? message.slice(0, 140).trim() : "";
+    displayMessage.hidden = !text;
+    displayMessage.textContent = text;
+  }
+
   function applyCommand(command) {
+    if (command.action === "message") {
+      showDisplayMessage(command.text);
+      return;
+    }
     if (command.action === "join") {
       document.body.classList.add("paired-display");
       if (pairDialog.open) pairDialog.close();
@@ -118,6 +134,7 @@
     const hadSession = Boolean(hostSession);
     hostSession = null;
     if (hadSession) {
+      showDisplayMessage("");
       resetWatch();
       resetTimer();
       refresh();
@@ -360,6 +377,9 @@
       formatRemote(stopwatch ? ms : Math.ceil(Math.max(0, ms) / 1000) * 1000, stopwatch && data.centiseconds);
     remoteDuration.hidden = !ready;
     remoteDuration.disabled = locked;
+    messageInput.disabled = locked;
+    messageSend.disabled = locked || !messageInput.value.trim();
+    messageClear.disabled = locked || !data.displayMessage;
     remoteModes.forEach(button => {
       button.setAttribute("aria-pressed", String(button.dataset.remoteMode === data.mode));
       button.disabled = locked;
@@ -415,6 +435,8 @@
         remoteStatus.textContent = "Sessão encerrada ou expirada.";
         remoteModes.concat(remoteActions).forEach(button => { button.disabled = true; });
         remoteDuration.disabled = true;
+        messageInput.disabled = messageSend.disabled = messageClear.disabled = true;
+        messageFeedback.textContent = "";
         return;
       }
       if (row.snapshot.tick !== lastHostTick) {
@@ -436,10 +458,10 @@
     if (remoteSession === session) setTimeout(() => readRemote(session), 750);
   }
 
-  async function send(action, targetMode, seconds) {
+  async function send(action, targetMode, seconds, text) {
     if (!remoteSession || !remoteSnapshot || sending || pending || performance.now() - lastSeenAt >= 5000) return;
     const id = Array.from(crypto.getRandomValues(new Uint8Array(16)), byte => byte.toString(16).padStart(2, "0")).join("");
-    const command = { id, action, mode: targetMode, seconds };
+    const command = { id, action, mode: targetMode, seconds, text };
     sending = true;
     paintRemote();
     try {
@@ -498,6 +520,20 @@
       send(action === "start" && active ? "pause" : action, data.mode);
     };
   });
+  async function sendMessage(text) {
+    if (!remoteSnapshot) return;
+    messageFeedback.textContent = await send("message", remoteSnapshot.mode, undefined, text)
+      ? (text ? "Mensagem enviada." : "Remoção solicitada.")
+      : "Não foi possível enviar. Tente novamente.";
+  }
+
+  messageInput.oninput = paintRemote;
+  byId("remote-message-form").onsubmit = event => {
+    event.preventDefault();
+    const text = messageInput.value.trim();
+    if (text) sendMessage(text);
+  };
+  messageClear.onclick = () => sendMessage("");
   readRemote(remoteSession);
   setInterval(paintRemote, 50);
 })();

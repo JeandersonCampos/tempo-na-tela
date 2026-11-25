@@ -189,6 +189,13 @@ body.paired-display main{padding-top:8px}
 #dialog input[role=switch]:checked::after{left:21px;background:var(--bg)}
 .settings-group p{margin:5px 0 0}
 #test-alert-status:empty,#screen-status:empty{display:none}
+#display-message{position:relative;z-index:2;margin:0 0 8px;padding:.55em .85em;border:1px solid var(--accent);border-radius:12px;background:var(--panel);color:var(--text);text-align:center;font-size:clamp(1rem,3vw,2.25rem);font-weight:750;line-height:1.25;overflow-wrap:anywhere}
+#remote-message-form{width:min(100%,34rem);margin:12px auto;text-align:left}
+#remote-message-form label{display:block;margin-bottom:6px;font-weight:700}
+#remote-message-input{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text);font:inherit}
+#remote-message-form .controls{justify-content:flex-start;margin-top:8px}
+#remote-message-form .btn{flex-direction:row}
+#remote-message-feedback:empty{display:none}
 </style>
 </head>
 <body>
@@ -210,6 +217,7 @@ body.paired-display main{padding-top:8px}
 </svg>
 <header class="shell"><h1 class="brand" style="margin:0"><img class="mark" src="./icon-192.png" width="38" height="38" alt="">Tempo na Tela</h1><button class="btn" id="pair-open" type="button">Conectar controle</button></header>
 <main class="shell">
+<p id="display-message" role="status" hidden></p>
 <section class="panel" id="panel" aria-labelledby="watch">
 <nav aria-label="Modo do relógio"><button id="watch" aria-pressed="true">Cronômetro</button><button id="timer" aria-pressed="false">Temporizador</button></nav>
 <p id="status" role="status"></p>
@@ -246,6 +254,15 @@ body.paired-display main{padding-top:8px}
     <button class="btn" type="button" data-remote-action="reset">Zerar</button>
     <button class="btn" type="button" data-remote-action="lap">Registrar volta</button>
   </div>
+  <form id="remote-message-form">
+    <label for="remote-message-input">Mensagem para o visor</label>
+    <input id="remote-message-input" type="text" maxlength="140" autocomplete="off" disabled>
+    <div class="controls">
+      <button class="btn primary" id="remote-message-send" type="submit" disabled>Enviar mensagem para o visor</button>
+      <button class="btn" id="remote-message-clear" type="button" disabled>Limpar mensagem</button>
+    </div>
+    <p id="remote-message-feedback" role="status"></p>
+  </form>
   <p id="remote-status" role="status">Conectando ao visor…</p>
   <ol id="remote-laps" aria-label="Voltas registradas" hidden></ol>
   <button class="btn" type="button" data-remote-action="end">Encerrar sessão</button>
@@ -664,6 +681,6 @@ keepScreenOn();
 </script>
 <script src="./qrcode.js"></script>
 <script src="./jsqr.js"></script>
-<script src="./remote-control.js?v=22"></script>
+<script src="./remote-control.js?v=23"></script>
 </body>
 </html>
