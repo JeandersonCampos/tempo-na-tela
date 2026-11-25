@@ -113,17 +113,35 @@ nav{margin-bottom:clamp(10px,2vw,26px)}
 :is(#panel,#remote-controller).done::after{opacity:var(--expiry-edge-opacity)}
 @keyframes timer-blink{0%,100%{opacity:.82} 50%{opacity:.08}}
 #panel.done .tile{color:var(--timer-alert)}
-#panel.done .tile::before{
-  position:absolute;
-  inset-block-start:6%;
-  inset-inline-start:5%;
-  color:inherit;
-  font-size:clamp(1.25rem,9cqw,4rem);
-  line-height:1;
+@media(orientation:landscape){
+  #panel.done .unit:first-child{
+    --negative-sign:"−";
+    --negative-space:.42em;
+    --negative-digit-width:54cqw;
+  }
 }
-#panel.done .unit:first-child .tile::before{content:"−"}
 @media(orientation:portrait){
-  #panel.done .clock:not([data-hours]) .unit:nth-child(3) .tile::before{content:"−"}
+  #panel.done .clock[data-hours] .unit:first-child,
+  #panel.done .clock:not([data-hours]) .unit:nth-child(3){
+    --negative-sign:"−";
+    --negative-space:.42em;
+    --negative-digit-width:54cqw;
+  }
+}
+#panel.done .tile>span{
+  font-size:max(1.5rem,min(var(--negative-digit-width,64cqw),79cqh));
+  padding-inline-start:var(--negative-space,0em);
+}
+#panel.done .tile>span:not(.flap){position:relative}
+#panel.done .tile>span:not(.flap)::before{
+  content:var(--negative-sign,none);
+  position:absolute;
+  inset-inline-start:0;
+  inset-block-start:50%;
+  transform:translateY(-50%);
+  font-size:.62em;
+  line-height:1;
+  z-index:2;
 }
 #panel.done #status,#remote-controller.done #remote-alert{
   order:0;
