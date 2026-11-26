@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Cronômetro com voltas e temporizador configurável.">
 <title>Tempo na Tela</title>
-<meta name="theme-color" content="#2154cb">
+<meta name="theme-color" content="#eef2fa">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" href="./icon-192.png">
 <link rel="icon" type="image/png" href="./icon-192.png">
@@ -309,6 +309,11 @@ body.paired-display main{padding-top:8px}
   <h3 id="settings-display">Exibição</h3>
   <label><svg class="button-icon" aria-hidden="true" focusable="false"><use href="#icon-palette"/></svg><span>Tema</span><select id="theme"><option value="light">Claro</option><option value="dark">Escuro</option></select></label>
   <label><svg class="button-icon" aria-hidden="true" focusable="false"><use href="#icon-precision"/></svg><span>Centésimos no cronômetro</span><input id="centiseconds" type="checkbox" role="switch"></label>
+  <button class="btn action-button" id="settings-fullscreen" type="button" aria-pressed="false">
+    <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4H4v4m12-4h4v4M4 16v4h4m12-4v4h-4"/></svg>
+    <span id="fullscreen-label">Ativar tela cheia</span>
+  </button>
+  <p id="fullscreen-status" role="status" hidden></p>
   <p id="screen-status"></p>
 </section>
 <section class="settings-group" aria-labelledby="settings-alerts">
@@ -415,10 +420,44 @@ theme.value = readPreference("theme") || (matchMedia("(prefers-color-scheme: dar
 centiseconds.checked = readPreference("centiseconds") === "true";
 sound.checked = readPreference("sound") === "true";
 vibration.checked = readPreference("vibration") === "true";
-document.documentElement.dataset.theme = theme.value;
+applyTheme();
 byId("support").hidden = typeof navigator.vibrate === "function";
-theme.onchange = () => {
+function applyTheme() {
   document.documentElement.dataset.theme = theme.value;
+  document.querySelector('meta[name="theme-color"]').content = theme.value === "dark" ? "#101625" : "#eef2fa";
+}
+
+const fullscreenButton = byId("settings-fullscreen");
+const fullscreenStatus = byId("fullscreen-status");
+function updateFullscreenButton() {
+  const active = Boolean(document.fullscreenElement);
+  fullscreenButton.setAttribute("aria-pressed", String(active));
+  byId("fullscreen-label").textContent = active ? "Sair da tela cheia" : "Ativar tela cheia";
+}
+document.addEventListener("fullscreenchange", updateFullscreenButton);
+fullscreenButton.onclick = async () => {
+  fullscreenStatus.hidden = true;
+  if (!document.fullscreenElement && !document.fullscreenEnabled) {
+    fullscreenStatus.textContent = "O navegador não oferece tela cheia nesta janela.";
+    fullscreenStatus.hidden = false;
+    return;
+  }
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else {
+      await document.documentElement.requestFullscreen({ navigationUI: "hide" });
+      byId("dialog").close();
+    }
+    updateFullscreenButton();
+  } catch {
+    fullscreenStatus.textContent = "O navegador não conseguiu mudar o modo de tela.";
+    fullscreenStatus.hidden = false;
+  }
+};
+updateFullscreenButton();
+
+theme.onchange = () => {
+  applyTheme();
   savePreference("theme", theme.value);
 };
 async function prepareAudio() {
