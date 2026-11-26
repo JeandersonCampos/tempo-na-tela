@@ -27,7 +27,9 @@
   let sending = false;
   let lastSeenAt = 0;
   let lastHostTick;
-  let snapshotReceivedAt = 0;
+  let bestClockOffset = Infinity;
+  let clockSample;
+  let shownTime;
   let displayedLaps = "";
   let enteredDuration = false;
   remoteDuration.oninput = () => { enteredDuration = true; remoteStatus.textContent = ""; };
@@ -389,21 +391,57 @@
     messageSend.disabled = locked || (!showing && !messageInput.value.trim());
   }
 
+  function acceptClockSample(data, sentAt, receivedAt) {
+    const stopwatch = data.mode === "watch";
+    const phase = stopwatch ? (data.watch.running ? "running" : "idle") : data.timer.phase;
+    const rate = phase === "running" ? (stopwatch ? 1 : -1) : phase === "finished" ? -1 : 0;
+    const value = stopwatch ? data.watch.elapsed : data.timer.remaining;
+    // The lowest observed offset is least affected by an older server snapshot.
+    const offset = receivedAt - data.tick - Math.min(250, (receivedAt - sentAt) / 2);
+    bestClockOffset = Math.min(bestClockOffset, offset);
+    const age = Math.max(0, Math.min(2000, receivedAt - data.tick - bestClockOffset));
+    const sample = { mode: data.mode, phase, rate, value: value + rate * age, at: receivedAt };
+    if (!clockSample || clockSample.mode !== sample.mode || clockSample.phase !== sample.phase || !rate) {
+      shownTime = { value: sample.value, at: receivedAt };
+    }
+    clockSample = sample;
+  }
+
+  function paintRemoteClock(now = performance.now()) {
+    if (!remoteSnapshot || !clockSample) return;
+    const { rate, phase, mode: clockMode } = clockSample;
+    const delta = Math.max(0, now - shownTime.at);
+    const projected = shownTime.value + rate * delta;
+    const target = clockSample.value + rate * Math.max(0, now - clockSample.at);
+    // Correct network jitter gradually, without reversing the direction of time.
+    const correction = Math.max(-delta * .12, Math.min(delta * .12, target - projected));
+    const ms = projected + correction;
+    shownTime = { value: ms, at: now };
+    const stopwatch = clockMode === "watch";
+    const finished = !stopwatch && phase === "finished";
+    const live = now - lastSeenAt < 5000;
+    paintRemoteAlert(ms, live && !stopwatch && phase === "running", live && finished);
+    const output = byId("remote-clock");
+    const text = finished ? "−" + formatRemote(Math.abs(ms)) :
+      formatRemote(stopwatch ? ms : Math.ceil(Math.max(0, ms) / 1000) * 1000, stopwatch && remoteSnapshot.centiseconds);
+    if (output.textContent !== text) output.textContent = text;
+  }
+
+  function animateRemoteClock() {
+    paintRemoteClock();
+    if (remoteSession) requestAnimationFrame(animateRemoteClock);
+  }
+
   function paintRemote() {
     if (!remoteSnapshot) return;
     const data = remoteSnapshot;
     const stopwatch = data.mode === "watch";
-    const delta = performance.now() - snapshotReceivedAt;
     const active = stopwatch ? data.watch.running : data.timer.phase === "running";
     const finished = !stopwatch && data.timer.phase === "finished";
     const ready = !stopwatch && data.timer.phase === "ready";
     const live = performance.now() - lastSeenAt < 5000;
     const locked = !live || sending || Boolean(pending);
-    const ms = stopwatch ? data.watch.elapsed + (active ? delta : 0) :
-      data.timer.remaining - (active || finished ? delta : 0);
-    paintRemoteAlert(ms, live && !stopwatch && active, live && finished);
-    byId("remote-clock").textContent = finished ? "−" + formatRemote(Math.abs(ms)) :
-      formatRemote(stopwatch ? ms : Math.ceil(Math.max(0, ms) / 1000) * 1000, stopwatch && data.centiseconds);
+    paintRemoteClock();
     remoteDuration.hidden = !ready;
     remoteDuration.disabled = locked;
     messageInput.disabled = locked;
@@ -451,7 +489,9 @@
   async function readRemote(session) {
     if (remoteSession !== session) return;
     try {
+      const sentAt = performance.now();
       const [row] = await request(session);
+      const receivedAt = performance.now();
       if (remoteSession !== session) return;
       if (!row) {
         remoteSession = null;
@@ -471,7 +511,12 @@
       }
       if (row.snapshot.tick !== lastHostTick) {
         lastHostTick = row.snapshot.tick;
-        lastSeenAt = snapshotReceivedAt = performance.now();
+        if (receivedAt - lastSeenAt >= 5000) {
+          bestClockOffset = Infinity;
+          clockSample = null;
+        }
+        lastSeenAt = receivedAt;
+        acceptClockSample(row.snapshot, sentAt, receivedAt);
         remoteSnapshot = row.snapshot;
         showLaps(remoteSnapshot);
         if (!enteredDuration) setRemoteDuration(Math.round(row.snapshot.timer.duration / 1000));
@@ -573,5 +618,6 @@
     if (!messageInput.disabled) messageInput.focus();
   };
   readRemote(remoteSession);
-  setInterval(paintRemote, 50);
+  setInterval(paintRemote, 250);
+  requestAnimationFrame(animateRemoteClock);
 })();
